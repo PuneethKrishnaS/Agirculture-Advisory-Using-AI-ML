@@ -21,7 +21,7 @@ const MapEventHandler = ({ points, setPoints }) => {
   return null;
 };
 
-const MapPickerModal = ({ isOpen, onClose, onSave }) => {
+const MapPickerModal = ({ isOpen, onClose, onSave, isMandatory = false }) => {
   const [points, setPoints] = useState([]);
   const [calculatedArea, setCalculatedArea] = useState(0); // in Acres
   const [plotName, setPlotName] = useState('');
@@ -77,9 +77,11 @@ const MapPickerModal = ({ isOpen, onClose, onSave }) => {
               onChange={e => setPlotName(e.target.value)}
               className="border border-outline-variant rounded-xl px-4 py-2 w-64 focus:ring-2 focus:ring-primary focus:outline-none"
             />
-            <button onClick={onClose} className="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors">
-              <span translate="no" className="material-symbols-outlined notranslate">close</span>
-            </button>
+            {!isMandatory && (
+              <button onClick={onClose} className="p-2 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors">
+                <span translate="no" className="material-symbols-outlined notranslate">close</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -147,9 +149,11 @@ const MapPickerModal = ({ isOpen, onClose, onSave }) => {
             <span translate="no" className="material-symbols-outlined notranslate text-sm">delete</span> Clear Points
           </button>
           <div className="flex gap-3">
-            <button onClick={onClose} className="px-6 py-2 rounded-lg font-label-lg text-primary hover:bg-primary-container transition-colors">
-              Cancel
-            </button>
+            {!isMandatory && (
+              <button onClick={onClose} className="px-6 py-2 rounded-lg font-label-lg text-primary hover:bg-primary-container transition-colors">
+                Cancel
+              </button>
+            )}
             <button onClick={handleSave} className="px-8 py-2 rounded-lg font-label-lg text-white bg-primary hover:brightness-110 transition-all shadow-md">
               Save Plot
             </button>

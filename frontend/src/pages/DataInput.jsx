@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMap, LayersControl, Rectangle, LayerGroup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -121,18 +121,15 @@ const MapUpdater = ({ bounds }) => {
 
 const DataInput = () => {
   const { addToast } = useToast();
-  const { history, fetchHistory, activePlotId, setActivePlotId, activePlot, setSavedPlots, savedPlots } = usePlotContext();
+  const { history, fetchHistory, activePlotId, setActivePlotId, activePlot, setSavedPlots, savedPlots, formDrafts, updateFormDraft } = usePlotContext();
   const [activeTab, setActiveTab] = useState('crop'); // crop, fertilizer, irrigation, disease
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
   const [lastSavedSnapshot, setLastSavedSnapshot] = useState(null);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
 
-  // Unified Form State for all ML Models
-  const [formData, setFormData] = useState({
+
+  const defaultFormData = {
     plotName: '',
     latitude: '',
     longitude: '',
@@ -174,7 +171,51 @@ const DataInput = () => {
 
     // Disease (Images)
     diseaseImages: []
+  };
+
+  const [formData, setFormData] = useState(() => {
+    if (activePlotId && formDrafts[activePlotId]) return formDrafts[activePlotId];
+    if (activePlot?.formData) return { ...defaultFormData, ...activePlot.formData, plotName: activePlot.name, fieldArea: activePlot.area, latitude: activePlot.lat, longitude: activePlot.lng };
+    return defaultFormData;
   });
+
+  useEffect(() => {
+    if (activePlotId && formData) {
+      updateFormDraft(activePlotId, formData);
+    }
+  }, [formData, activePlotId]);
+
+  const lastFetchedPlotId = useRef(null);
+
+  useEffect(() => {
+    if (activePlotId) {
+      let currentLat, currentLng;
+
+      if (formDrafts[activePlotId]) {
+        setFormData(formDrafts[activePlotId]);
+        currentLat = formDrafts[activePlotId].latitude;
+        currentLng = formDrafts[activePlotId].longitude;
+      } else if (activePlot?.formData) {
+        setFormData({ ...defaultFormData, ...activePlot.formData, plotName: activePlot.name, fieldArea: activePlot.area, latitude: activePlot.lat, longitude: activePlot.lng });
+        currentLat = activePlot.lat;
+        currentLng = activePlot.lng;
+      } else if (activePlot) {
+        setFormData({ ...defaultFormData, plotName: activePlot.name, fieldArea: activePlot.area, latitude: activePlot.lat, longitude: activePlot.lng });
+        currentLat = activePlot.lat;
+        currentLng = activePlot.lng;
+      }
+
+      // Fetch live weather when the plot changes, so we always have fresh data
+      if (currentLat && currentLng && lastFetchedPlotId.current !== activePlotId) {
+         lastFetchedPlotId.current = activePlotId;
+         // Note: We use setTimeout to allow formData state to settle before fetchWeather 
+         // overwrites the weather specific fields in formData.
+         setTimeout(() => {
+           fetchWeatherForLocation(currentLat, currentLng);
+         }, 0);
+      }
+    }
+  }, [activePlotId, activePlot]);
 
   const [predictionResult, setPredictionResult] = useState({
     crop: null,
@@ -219,61 +260,57 @@ const DataInput = () => {
     const newLng = center.lng.toFixed(4);
     const newArea = areaAcres.toFixed(2);
     const newName = name || `Plot ${savedPlots.length + 1} (${newLat}, ${newLng})`;
-    const newId = Date.now().toString();
 
-    const newPlot = { id: newId, name: newName, lat: newLat, lng: newLng, area: newArea };
-    setSavedPlots([...savedPlots, newPlot]);
-    setActivePlotId(newId);
+    try {
+      addToast("Creating new plot in database...", "info");
+      
+      const payload = {
+        location: newName,
+        type: "New Plot Profile",
+        status: "Created",
+        formData: {
+          ...formData,
+          fieldArea: newArea,
+          latitude: newLat,
+          longitude: newLng,
+          plotName: newName
+        }
+      };
 
-    setFormData(prev => ({ 
-      ...prev, 
-      fieldArea: newArea,
-      latitude: newLat,
-      longitude: newLng,
-      plotName: newName
-    }));
-    
-    addToast("Location saved! Fetching realtime weather data...", "info");
-    await fetchWeatherForLocation(newLat, newLng);
-  };
-
-  const handlePlotSelect = async (e) => {
-    const plotId = e.target.value;
-    if (!plotId) {
-      setActivePlotId('');
-      setFormData(prev => ({ ...prev, latitude: '', longitude: '', fieldArea: '', plotName: '' }));
-      return;
-    }
-    
-    let selected = savedPlots.find(p => p.id === plotId);
-    let isHistory = false;
-    
-    if (!selected) {
-      selected = history.find(h => h.id === plotId);
-      isHistory = true;
-    }
-
-    if (selected) {
-      setActivePlotId(plotId);
-      const name = isHistory ? selected.location : selected.name;
-      const lat = isHistory ? (selected.formData?.latitude || formData.latitude) : selected.lat;
-      const lng = isHistory ? (selected.formData?.longitude || formData.longitude) : selected.lng;
-
-      if (selected.formData) {
-        setFormData(prev => ({ ...prev, ...selected.formData, plotName: name }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          latitude: lat,
-          longitude: lng,
-          fieldArea: selected.area || '15',
-          plotName: name
+      const res = await fetch('http://localhost:5000/api/save_history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      
+      if(data.success) {
+        const newId = data.record.id;
+        await fetchHistory(); // Wait for fetchHistory to update everything
+        setActivePlotId(newId);
+        
+        setFormData(prev => ({ 
+          ...prev, 
+          fieldArea: newArea,
+          latitude: newLat,
+          longitude: newLng,
+          plotName: newName
         }));
+        
+        addToast("Plot created successfully! Fetching realtime weather data...", "success");
+        await fetchWeatherForLocation(newLat, newLng);
+      } else {
+        addToast("Failed to create plot in database.", "error");
       }
-      addToast(`Switched to ${name}. Fetching live weather...`, "info");
-      await fetchWeatherForLocation(lat, lng);
+    } catch (err) {
+      console.error(err);
+      addToast("Failed to connect to backend to save plot.", "error");
     }
   };
+  const handlePlotSelect = (e) => {
+    const plotId = e.target.value;
+    if (plotId) setActivePlotId(plotId);
+  };;
 
   const handleSaveToDB = async () => {
     if (!activePlotId) {
@@ -295,6 +332,7 @@ const DataInput = () => {
       addToast("Saving plot profile and metrics to Database...", "info");
       
       const payload = {
+        id: activePlotId,
         location: formData.plotName || "Unknown Plot",
         type: `${typeLabel} Analysis`,
         npk: `${formData.nitrogen}:${formData.phosphorus}:${formData.potassium}`,
@@ -659,13 +697,13 @@ const DataInput = () => {
             </div>
           )}
           
-          <div className="pt-6 border-t border-outline-variant/30">
+          <div className="pt-6 border-t border-border mt-8">
             <button 
               onClick={handleSaveToDB}
-              className="w-full bg-tertiary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md transition-all active:scale-95"
+              className="w-full bg-primary text-primary-foreground h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all active:scale-95"
             >
               <span className="material-symbols-outlined">save</span>
-              Save All Plot Data to DB
+              Update Current Plot Record
             </button>
           </div>
           
@@ -685,9 +723,8 @@ const DataInput = () => {
                   onChange={handlePlotSelect}
                   className="w-full appearance-none bg-surface-container-lowest border border-outline-variant text-on-surface text-label-lg rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-secondary focus:outline-none cursor-pointer"
                 >
-                  <option value="">-- Select a Plot --</option>
-                  {savedPlots.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.area} acres)</option>
+                  {savedPlots.map((plot) => (
+                    <option key={plot.id} value={plot.id}>{plot.name} ({plot.area} acres)</option>
                   ))}
                 </select>
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">arrow_drop_down</span>

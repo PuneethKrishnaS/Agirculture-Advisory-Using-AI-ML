@@ -7,7 +7,7 @@ const TopAppBar = ({ onPlotSelect }) => {
   const plots = savedPlots && savedPlots.length > 0 ? savedPlots : history || [];
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-background border-b border-border shadow-sm h-16 flex justify-between items-center px-4 md:px-8">
+    <header className="fixed top-0 left-0 w-full z-50 bg-background border-b border-border h-16 flex justify-between items-center px-4 md:px-8">
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-primary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>eco</span>
         <h1 className="text-xl font-bold text-primary tracking-tight hidden md:block">AgriSmart AI Labs</h1>
@@ -29,7 +29,6 @@ const TopAppBar = ({ onPlotSelect }) => {
               className="bg-transparent border-none outline-none text-sm font-medium text-foreground cursor-pointer pr-4 appearance-none"
               style={{ WebkitAppearance: 'none', background: 'transparent' }}
             >
-              <option value="" disabled>Select Location...</option>
               {plots.map(plot => (
                 <option key={plot.id} value={plot.id}>
                   {plot.name || plot.location}

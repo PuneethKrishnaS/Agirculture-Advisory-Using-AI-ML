@@ -6,13 +6,13 @@ import { usePlotContext } from '../contexts/PlotContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Simple SVG Icons for Shadcn style
 const CloudRain = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>;
 const Sun = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>;
 
 const MainDashboard = () => {
-  const [alerts, setAlerts] = useState([]);
   const { activePlot, history } = usePlotContext();
 
   const [summary, setSummary] = useState({
@@ -20,9 +20,9 @@ const MainDashboard = () => {
     total_plots_managed: 0,
     average_npk: "--",
     weather: { 
-      temp: "--", condition: "--", rain_chance: "--", hourly: [50, 50, 50, 50, 50],
+      temp: "--", condition: "--", rain_chance: "--", hourly: [],
       humidity: "--", wind_speed: "--", cloud_cover: "--", uv_index: "--", et0: "--",
-      soil_temp: "--"
+      soil_temp: "--", forecast24: []
     },
     moisture_trend: [50, 50, 50, 50, 50, 50, 50]
   });
@@ -34,12 +34,7 @@ const MainDashboard = () => {
   const totalPlots = history?.length || 0;
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/alerts')
-      .then(res => res.json())
-      .then(data => {
-        if(Array.isArray(data)) setAlerts(data.slice(0, 3));
-      })
-      .catch(err => console.error("Error fetching alerts:", err));
+
 
     fetch('http://localhost:5000/api/dashboard_summary')
       .then(res => res.json())
@@ -61,7 +56,7 @@ const MainDashboard = () => {
       const lng = activePlot.formData.longitude;
 
       if (lat && lng) {
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,cloud_cover&hourly=precipitation_probability,soil_temperature_0_to_7cm,soil_moisture_0_to_7cm,uv_index,et0_fao_evapotranspiration&past_days=7&forecast_days=1`)
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,cloud_cover&hourly=temperature_2m,precipitation_probability,soil_temperature_0_to_7cm,soil_moisture_0_to_7cm,uv_index,et0_fao_evapotranspiration&past_days=7&forecast_days=2`)
           .then(r => r.json())
           .then(data => {
             if(data && data.current) {
@@ -72,25 +67,33 @@ const MainDashboard = () => {
               const wind_speed = data.current.wind_speed_10m;
               const cloud_cover = data.current.cloud_cover;
 
-              const currentHourIdx = data.hourly?.time?.length - 24 + new Date().getHours() || 0;
-              const safeIdx = Math.max(0, currentHourIdx);
+              const now = new Date();
+              const startIndex = data.hourly?.time?.findIndex(t => new Date(t) >= now) || 0;
+              const safeIdx = Math.max(0, startIndex);
               
               const rain_chance = data.hourly?.precipitation_probability ? data.hourly.precipitation_probability[safeIdx] || 0 : 0;
               const uv_index = data.hourly?.uv_index ? data.hourly.uv_index[safeIdx] || 0 : 0;
               const et0 = data.hourly?.et0_fao_evapotranspiration ? data.hourly.et0_fao_evapotranspiration[safeIdx] || 0 : 0;
               const soil_temp = data.hourly?.soil_temperature_0_to_7cm ? data.hourly.soil_temperature_0_to_7cm[safeIdx] || 0 : 0;
 
-              const hourly = data.hourly?.precipitation_probability ? [
-                data.hourly.precipitation_probability[safeIdx-2] || 10,
-                data.hourly.precipitation_probability[safeIdx] || 20,
-                data.hourly.precipitation_probability[safeIdx+2] || 30,
-                data.hourly.precipitation_probability[safeIdx+4] || 20,
-                data.hourly.precipitation_probability[safeIdx+6] || 10,
-              ] : [20, 30, 50, 40, 20];
+              const forecast24 = [];
+              if (data.hourly && data.hourly.time) {
+                for (let i = 0; i < 24; i++) {
+                   const idx = safeIdx + i;
+                   if (idx >= data.hourly.time.length) break;
+                   const timeStr = data.hourly.time[idx];
+                   const hourLabel = new Date(timeStr).toLocaleTimeString([], { hour: 'numeric', hour12: true });
+                   forecast24.push({
+                     time: hourLabel,
+                     temp: data.hourly.temperature_2m ? Math.round(data.hourly.temperature_2m[idx]) : 0,
+                     rain: data.hourly.precipitation_probability ? data.hourly.precipitation_probability[idx] : 0
+                   });
+                }
+              }
               
               setSummary(prev => ({
                 ...prev,
-                weather: { temp, condition: rain, rain_chance, hourly, humidity, wind_speed, cloud_cover, uv_index, et0, soil_temp }
+                weather: { temp, condition: rain, rain_chance, hourly: [], humidity, wind_speed, cloud_cover, uv_index, et0, soil_temp, forecast24 }
               }));
 
               if (data.hourly?.soil_moisture_0_to_7cm) {
@@ -194,21 +197,32 @@ const MainDashboard = () => {
                   <div className="text-sm text-muted-foreground mt-1">Rain chance: {summary.weather.rain_chance}%</div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="flex items-end justify-between h-20 gap-2">
-                  <div className="w-full bg-primary rounded-t-sm transition-all hover:bg-primary/40" style={{ height: `${summary.weather.hourly[0]}%` }}></div>
-                  <div className="w-full bg-primary rounded-t-sm transition-all hover:bg-primary/60" style={{ height: `${summary.weather.hourly[1]}%` }}></div>
-                  <div className="w-full bg-primary rounded-t-sm transition-all hover:bg-primary/80" style={{ height: `${summary.weather.hourly[2]}%` }}></div>
-                  <div className="w-full bg-primary rounded-t-sm transition-all hover:bg-primary/80" style={{ height: `${summary.weather.hourly[3]}%` }}></div>
-                  <div className="w-full bg-primary rounded-t-sm transition-all hover:bg-primary/50" style={{ height: `${summary.weather.hourly[4]}%` }}></div>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>10am</span>
-                  <span>12pm</span>
-                  <span>2pm</span>
-                  <span>4pm</span>
-                  <span>6pm</span>
-                </div>
+              <div className="h-48 w-full mt-4">
+                {summary.weather.forecast24 && summary.weather.forecast24.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={summary.weather.forecast24} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorRain" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.3} />
+                      <XAxis dataKey="time" tick={{fontSize: 10}} tickMargin={10} minTickGap={20} axisLine={false} tickLine={false} />
+                      <YAxis yAxisId="left" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}°`} />
+                      <YAxis yAxisId="right" orientation="right" tick={{fontSize: 10}} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
+                      <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                      <Area yAxisId="left" type="monotone" dataKey="temp" name="Temperature (°C)" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorTemp)" />
+                      <Area yAxisId="right" type="monotone" dataKey="rain" name="Rain Chance (%)" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorRain)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-muted-foreground text-sm border border-dashed rounded-lg">Loading forecast...</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -254,31 +268,6 @@ const MainDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Alerts</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {alerts.length > 0 ? (
-              alerts.map((alert, idx) => (
-                <div key={idx} className="flex items-start justify-between rounded-md border p-4">
-                  <div className="flex items-start gap-4">
-                    <span className={`material-symbols-outlined ${alert.type === 'critical' ? 'text-destructive' : 'text-primary'}`}>{alert.icon}</span>
-                    <div>
-                      <p className="font-medium leading-none mb-1">{alert.title}</p>
-                      <p className="text-sm text-muted-foreground">{alert.message}</p>
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">{alert.time_ago}</div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-muted-foreground py-4 text-center border rounded-md bg-muted/20">No active alerts at this time.</div>
-            )}
-          </CardContent>
-        </Card>
 
       </main>
       <BottomNavBar />

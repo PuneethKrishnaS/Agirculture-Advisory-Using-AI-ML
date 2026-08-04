@@ -10,6 +10,18 @@ export const PlotProvider = ({ children }) => {
   const [activePlotId, setActivePlotId] = useState(null);
   const [activePlot, setActivePlot] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [formDrafts, setFormDrafts] = useState({});
+  const [advisoryResults, setAdvisoryResults] = useState({});
+
+  const updateAdvisoryResult = (plotId, result) => {
+    if (!plotId) return;
+    setAdvisoryResults(prev => ({ ...prev, [plotId]: result }));
+  };
+
+  const updateFormDraft = (plotId, newFormData) => {
+    if (!plotId) return;
+    setFormDrafts(prev => ({ ...prev, [plotId]: newFormData }));
+  };
 
   const fetchHistory = async () => {
     setIsLoading(true);
@@ -29,14 +41,24 @@ export const PlotProvider = ({ children }) => {
         }));
         setSavedPlots(loadedPlots);
 
+        const savedAdvisories = {};
+        data.forEach(h => {
+          if (h.advisoryResults && h.id) {
+            savedAdvisories[h.id] = h.advisoryResults;
+          }
+        });
+        if (Object.keys(savedAdvisories).length > 0) {
+          setAdvisoryResults(prev => ({...prev, ...savedAdvisories}));
+        }
+
         // If we have an activePlotId, update the activePlot object
         if (activePlotId) {
-          const found = data.find(p => p.id === activePlotId);
+          const found = loadedPlots.find(p => p.id === activePlotId);
           setActivePlot(found || null);
-        } else if (data.length > 0) {
+        } else if (loadedPlots.length > 0) {
           // Default to the first plot if none selected
-          setActivePlotId(data[0].id);
-          setActivePlot(data[0]);
+          setActivePlotId(loadedPlots[0].id);
+          setActivePlot(loadedPlots[0]);
         }
       }
     } catch (err) {
@@ -52,11 +74,11 @@ export const PlotProvider = ({ children }) => {
 
   // When activePlotId changes manually, update the activePlot object
   useEffect(() => {
-    if (history.length > 0) {
-      const found = history.find(p => p.id === activePlotId);
+    if (savedPlots.length > 0) {
+      const found = savedPlots.find(p => p.id === activePlotId);
       setActivePlot(found || null);
     }
-  }, [activePlotId, history]);
+  }, [activePlotId, savedPlots]);
 
   return (
     <PlotContext.Provider value={{
@@ -67,7 +89,11 @@ export const PlotProvider = ({ children }) => {
       setSavedPlots,
       setActivePlotId,
       fetchHistory,
-      isLoading
+      isLoading,
+      formDrafts,
+      updateFormDraft,
+      advisoryResults,
+      updateAdvisoryResult
     }}>
       {children}
     </PlotContext.Provider>

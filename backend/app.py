@@ -3,6 +3,8 @@ from flask_cors import CORS
 import requests
 import sys
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import joblib
 import sqlite3
 
@@ -165,23 +167,6 @@ def login_user():
         return jsonify({"message": "Login successful", "user": {"id": str(user['_id']), "email": user['email'], "farm_name": user['farm_name']}})
     return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route('/api/alerts', methods=['GET'])
-def get_alerts():
-    db = get_db_connection()
-    alerts_col = db.alerts
-    alerts = list(alerts_col.find({"dismissed": 0}))
-    for a in alerts:
-        a['id'] = str(a.pop('_id'))
-    # Reverse to show newest first, assuming naturally ordered by _id
-    alerts.reverse()
-    return jsonify(alerts)
-
-@app.route('/api/alerts/<alert_id>/dismiss', methods=['POST'])
-def dismiss_alert(alert_id):
-    db = get_db_connection()
-    alerts_col = db.alerts
-    alerts_col.update_one({"_id": alert_id}, {"$set": {"dismissed": 1}})
-    return jsonify({"message": "Alert dismissed"})
 
 @app.route('/api/logs', methods=['POST'])
 def create_farm_log():
@@ -216,7 +201,7 @@ def predict_crop():
         initialize_models()
     try:
         data = request.json
-        features = [data.get(k, 0) for k in ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']]
+        features = [float(data.get(k, 0)) if data.get(k, 0) not in ['', None] else 0.0 for k in ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']]
         shap_result = crop_explainer.explain_with_shap(features)
         return jsonify({
             "recommended_crop": shap_result['prediction'],
@@ -241,7 +226,7 @@ def predict_fertilizer():
         cat_cols = ['Soil_Type', 'Crop_Type', 'Crop_Growth_Stage', 'Season', 
                     'Irrigation_Type', 'Previous_Crop', 'Region']
         
-        df_num = df_input[num_cols].astype(float).fillna(0)
+        df_num = df_input[num_cols].replace('', 0).astype(float).fillna(0)
         df_cat = df_input[cat_cols].fillna('Unknown')
         
         df_cat_encoded = pd.DataFrame(fertilizer_ordinal_encoder.transform(df_cat), columns=cat_cols)
@@ -273,7 +258,7 @@ def predict_irrigation():
         cat_cols = ['Soil_Type', 'Crop_Type', 'Crop_Growth_Stage', 'Season', 
                     'Irrigation_Type', 'Water_Source', 'Mulching_Used', 'Region']
         
-        df_num = df_input[num_cols].astype(float).fillna(0)
+        df_num = df_input[num_cols].replace('', 0).astype(float).fillna(0)
         df_cat = df_input[cat_cols].fillna('Unknown')
         
         df_cat_encoded = pd.DataFrame(irrigation_ordinal_encoder.transform(df_cat), columns=cat_cols)
@@ -372,10 +357,20 @@ def save_history():
             "formData": data.get("formData", {})
         }
         
-        history_col.insert_one(record)
-        # Remove _id before returning
+        record_id = data.get("id")
+        if record_id:
+            try:
+                from bson.objectid import ObjectId
+                history_col.update_one({"_id": ObjectId(record_id)}, {"$set": record})
+                record['id'] = record_id
+                return jsonify({"success": True, "record": record})
+            except Exception as e:
+                print("Update failed, falling back to insert:", e)
+                
+        res = history_col.insert_one(record)
+        record['id'] = str(res.inserted_id)
         if '_id' in record:
-            record['id'] = str(record.pop('_id'))
+            del record['_id']
         return jsonify({"success": True, "record": record})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -396,6 +391,22 @@ def delete_history(record_id):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/history/<record_id>/advisory', methods=['POST'])
+def save_advisory(record_id):
+    try:
+        data = request.json
+        db = get_db_connection()
+        history_col = db.history
+        from bson.objectid import ObjectId
+        result = history_col.update_one(
+            {"_id": ObjectId(record_id)},
+            {"$set": {"advisoryResults": data}}
+        )
+        if result.modified_count == 1 or result.matched_count == 1:
+            return jsonify({"success": True, "message": "Advisory saved successfully"})
+        return jsonify({"error": "Record not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/image', methods=['GET'])
 def get_image():
@@ -484,6 +495,63 @@ def get_dashboard_summary():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/generate_advice', methods=['POST'])
+def generate_advice():
+    data = request.json
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return jsonify({"advice": "GROQ_API_KEY environment variable is not set. Please get a free API key from console.groq.com, set it in your environment, and restart the backend."})
+
+    prompt = f"""
+    You are an expert agronomist AI. The farmer has a plot with the following conditions:
+    - Crop ML Recommendation: {data.get('crop')} (Key drivers: {data.get('crop_reasoning')})
+    - Fertilizer ML Recommendation: {data.get('fertilizer')} (Key drivers: {data.get('fertilizer_reasoning')})
+    - Irrigation ML Recommendation: {data.get('irrigation')} (Key drivers: {data.get('irrigation_reasoning')})
+    - Soil NPK: {data.get('N')}:{data.get('P')}:{data.get('K')}
+    - Soil pH: {data.get('ph')}
+    - Temperature: {data.get('temperature')}C
+    - Rainfall: {data.get('rainfall')}mm
+
+    You MUST output your answer in valid JSON format. The JSON object must have exactly these 5 keys. 
+    Each key must map to an object containing "title" and "information":
+
+    1. "health_score": {{ "title": "Smart Farm Health Score", "information": "Calculate a Farm Health Score (0-100)... List key metrics (Soil Health, Water Availability, Nutrient Balance) with ✅ or ⚠ emojis." }}
+    2. "reasoning": {{ "title": "AI Reasoning", "information": "Explain in plain English exactly WHY the ML models recommended this specific crop based on the telemetry." }}
+    3. "calendar": {{ "title": "Growth Stage Calendar", "information": "Provide a comprehensive Markdown table detailing every week/phase of the crop lifecycle and what to do." }}
+    4. "pests": {{ "title": "Predictive Pest & Disease Warning", "information": "Predict the top 2 diseases/pests most likely to occur based on weather, and provide prevention tips." }}
+    5. "economics": {{ "title": "Economic & Yield Estimation", "information": "Estimate the yield per hectare and actionable optimization tips for profit." }}
+
+    Ensure every "information" value is a detailed string formatted with Markdown (bolding, bullet points, tables). Return ONLY the JSON object.
+    """
+
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "openai/gpt-oss-120b",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.7,
+            "max_tokens": 2048,
+            "response_format": {"type": "json_object"}
+        }
+        
+        resp = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
+        if resp.status_code == 200:
+            result = resp.json()
+            advice_str = result['choices'][0]['message']['content']
+            import json
+            try:
+                advice_json = json.loads(advice_str)
+                return jsonify({"advice": advice_json})
+            except Exception as e:
+                return jsonify({"advice": f"Failed to parse JSON: {str(e)}", "raw": advice_str}), 500
+        else:
+            return jsonify({"advice": f"API Error: {resp.text}"}), 500
+    except Exception as e:
+        return jsonify({"advice": f"Error connecting to AI API: {str(e)}"}), 500
 
 if __name__ == '__main__':
     initialize_models()

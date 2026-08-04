@@ -23,7 +23,7 @@ const BottomNavBar = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-background rounded-t-xl shadow-lg border-t border-border">
+    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-background rounded-t-xl border-t border-border">
       <Link to="/dashboard" className={getLinkClasses('/dashboard')}>
         <span className={getIconClasses('/dashboard')} style={getIconFill('/dashboard')}>home</span>
         <span className="text-xs font-medium mt-1">Home</span>
@@ -39,11 +39,7 @@ const BottomNavBar = () => {
         <span className="text-xs font-medium mt-1">Advisory</span>
       </Link>
       
-      <Link to="/alerts" className={`${getLinkClasses('/alerts')} relative`}>
-        <span className={getIconClasses('/alerts')} style={getIconFill('/alerts')}>notifications</span>
-        <span className="text-xs font-medium mt-1">Alerts</span>
-        <span className="absolute top-1 right-3 w-2 h-2 bg-destructive rounded-full shadow-sm"></span>
-      </Link>
+
       
       <Link to="/reports" className={getLinkClasses('/reports')}>
         <span className={getIconClasses('/reports')} style={getIconFill('/reports')}>analytics</span>
