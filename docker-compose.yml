@@ -10,7 +10,7 @@ services:
     environment:
       - PORT=5000
       # Add any necessary API keys here, e.g.:
-      # - GROQ_API_KEY=your_key_here
+      - GROQ_API_KEY=your_key_here
     volumes:
       - backend_data:/app/backend/.mongita
     restart: unless-stopped
