@@ -55,7 +55,10 @@ Open the `docker-compose.yml` file in the root folder using a text editor. Add y
 ```
 
 ### 2. Start the Application
-Open a terminal in the root directory and run:
+Open a terminal (Command Prompt or PowerShell) inside the main project folder (the folder containing the `docker-compose.yml` file).
+*(Tip for Windows: Open the folder in File Explorer, click the address bar at the top, type `cmd`, and press Enter).*
+
+Run the following command:
 ```bash
 docker-compose up --build -d
 ```
@@ -84,7 +87,8 @@ GROQ_API_KEY=your_groq_api_key_here
 ```
 
 ### 2. Backend & ML Setup
-Open a terminal in the root directory of the project:
+Open a terminal (Command Prompt or PowerShell) inside the main project folder (the folder containing `requirements.txt`).
+*(Tip for Windows: Open the folder in File Explorer, click the address bar at the top, type `cmd`, and press Enter).*
 
 ```bash
 # 1. Create a virtual environment
@@ -106,7 +110,7 @@ python app.py
 *The backend will load the PyTorch and Scikit-Learn models into memory and start on `http://localhost:5000`.*
 
 ### 3. Frontend Setup
-Open a **new** terminal in the root directory (leave the backend running in the first terminal):
+Open a **new** terminal in the main project folder (leave the backend running in the first terminal):
 
 ```bash
 # 1. Navigate to the frontend folder
