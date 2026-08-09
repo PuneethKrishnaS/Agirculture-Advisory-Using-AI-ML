@@ -17,6 +17,12 @@ Study these answers to understand the code logic, the specific libraries importe
 **Q3: Why are you using `pandas` in an inference script?**
 > **Answer:** In functions like `get_data_input`, we use pandas to load our original CSV datasets (`pd.read_csv`) to fetch a random, valid sample row for testing. We also use pandas DataFrames to structure the user's custom inputs and easily concatenate numerical columns with categorically encoded columns (`pd.concat([num_df, df_cat_encoded], axis=1)`) before feeding the data into the model.
 
+**Q4: Why are there so many files (11 files) in the `ml/models/` folder?**
+> **Answer:** Even though we only have 4 primary features, we need multiple helper files to make them work correctly. The files are broken down into three main categories:
+> 1. **The Actual Models (4 files):** The massive mathematical brains (`crop_recommendation_model.pkl`, `fertilizer_model.pkl`, `irrigation_model.pkl`, and the PyTorch `plant-disease-model-complete.pth`).
+> 2. **Label Encoders (3 files):** Models only spit out numbers (e.g., predicting "2"). These encoders act as dictionaries that translate that "2" back into a human-readable word like "Urea" or "Rice".
+> 3. **Ordinal Encoders & Feature Lists (4 files):** Used to translate user text inputs (like typing "Sandy Soil") into the numerical values the model expects, and ensuring the columns are in the exact order the model was trained on.
+
 ---
 
 ## 📊 2. Data Preprocessing & Encoders
