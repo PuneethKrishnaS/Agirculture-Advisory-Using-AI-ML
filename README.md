@@ -126,6 +126,29 @@ npm run dev
 
 ---
 
+## 🖥️ Installation Option 3: Terminal-Only (ML Inference Script)
+
+If your client only wants to run the purely terminal-based Machine Learning script (without the web interface or Docker), they can use the `ml-for-agricultures-advisory` folder.
+
+### 1. Environment Setup
+*(Requires Python 3.12.6)*
+Open a terminal in the main project folder and run:
+```bash
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Run the Script
+Navigate into the ML sub-folder and execute the inference script:
+```bash
+cd ml-for-agricultures-advisory
+python demo_inference.py
+```
+*The script will run in your terminal and print the ML predictions and analytics directly to the console.*
+
+---
+
 ## 💻 Usage & Workflow
 
 1. **Dashboard (`/dashboard`):** View aggregate analytics, active plots, and live weather telemetry.
