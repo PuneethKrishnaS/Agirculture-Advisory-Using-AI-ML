@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, useMap, LayersControl, Rectangle, LayerGroup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, LayersControl, Rectangle, LayerGroup, Polygon } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useToast } from '../contexts/ToastContext';
+import { API_BASE_URL } from '../config';
 import { usePlotContext } from '../contexts/PlotContext';
 import MapPickerModal from '../components/MapPickerModal';
 import TopAppBar from '../components/TopAppBar';
@@ -110,10 +111,13 @@ const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
 const MapUpdater = ({ bounds }) => {
   const map = useMap();
   useEffect(() => {
-    if (bounds && bounds.length === 2 && bounds[0] && bounds[1]) {
-      map.fitBounds(bounds, { maxZoom: 18, animate: true });
-      map.setMaxBounds(bounds);
-      map.setMinZoom(map.getBoundsZoom(map.getBounds())); // Lock zoom out
+    if (bounds && bounds.length > 0) {
+      // Free the map constraints so we can fly to a new plot
+      map.setMinZoom(0);
+      map.setMaxBounds(null);
+      
+      // Fit bounds perfectly to the polygon or points, fully zoomed
+      map.fitBounds(bounds, { maxZoom: 20, animate: true, padding: [10, 10] });
     }
   }, [bounds, map]);
   return null;
@@ -255,7 +259,7 @@ const DataInput = () => {
     }
   };
 
-  const handleMapSave = async ({ center, areaAcres, name }) => {
+  const handleMapSave = async ({ center, points, areaAcres, name }) => {
     const newLat = center.lat.toFixed(4);
     const newLng = center.lng.toFixed(4);
     const newArea = areaAcres.toFixed(2);
@@ -273,11 +277,12 @@ const DataInput = () => {
           fieldArea: newArea,
           latitude: newLat,
           longitude: newLng,
-          plotName: newName
+          plotName: newName,
+          points: points
         }
       };
 
-      const res = await fetch('http://localhost:5000/api/save_history', {
+      const res = await fetch(`${API_BASE_URL}/api/save_history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -340,7 +345,7 @@ const DataInput = () => {
         formData: formData
       };
 
-      const res = await fetch('http://localhost:5000/api/save_history', {
+      const res = await fetch(`${API_BASE_URL}/api/save_history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -364,7 +369,7 @@ const DataInput = () => {
     if(!window.confirm("Are you sure you want to delete this record?")) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/history/${recordId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/history/${recordId}`, {
         method: 'DELETE'
       });
       const data = await res.json();
@@ -427,7 +432,7 @@ const DataInput = () => {
         const formDataPayload = new FormData();
         formDataPayload.append('image', formData.diseaseImages[0]);
         
-        const res = await fetch('http://localhost:5000/api/detect_disease', {
+        const res = await fetch(`${API_BASE_URL}/api/detect_disease`, {
           method: 'POST',
           body: formDataPayload
         });
@@ -448,7 +453,7 @@ const DataInput = () => {
     setPredictionResult(prev => ({...prev, [type]: null, shap: null, advice: null, isGeneratingAdvice: false})); // Clear previous result
     
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -465,18 +470,23 @@ const DataInput = () => {
         setPredictionResult(prev => ({...prev, [type]: result, shap, isGeneratingAdvice: false}));
       }
     } catch(err) {
-      console.error(err);
+          console.error(err);
       addToast("Prediction request failed.", "error");
     }
   };
 
-  const plotBounds = formData.bounds || (formData.latitude ? [
-    [parseFloat(formData.latitude) + 0.005, parseFloat(formData.longitude) - 0.005],
-    [parseFloat(formData.latitude) - 0.005, parseFloat(formData.longitude) + 0.005]
-  ] : [
-    [20.6000, 78.9600],
-    [20.5900, 78.9700]
-  ]);
+  const plotBounds = React.useMemo(() => {
+    if (activePlot?.points && activePlot.points.length > 0) {
+      return activePlot.points;
+    }
+    if (formData.latitude && formData.longitude) {
+      return [
+        [Number(formData.latitude) - 0.0002, Number(formData.longitude) - 0.0002],
+        [Number(formData.latitude) + 0.0002, Number(formData.longitude) + 0.0002]
+      ];
+    }
+    return [[20.5937, 78.9629], [22.5937, 80.9629]];
+  }, [activePlot?.points, formData.latitude, formData.longitude]);
 
   const handleBoundsChange = (newBounds) => {
     handleChange({ target: { name: 'bounds', value: newBounds } });
@@ -748,14 +758,26 @@ const DataInput = () => {
             <div className="w-full h-64 rounded-xl overflow-hidden relative border border-outline-variant/30">
               <MapContainer bounds={plotBounds} style={{ height: '100%', width: '100%' }} zoomControl={false} scrollWheelZoom={false} doubleClickZoom={false} dragging={false}>
                 <LayersControl position="topright">
-                  <LayersControl.BaseLayer checked name="Satellite">
+                  <LayersControl.BaseLayer checked name="Google Satellite (High Res)">
+                    <TileLayer
+                      url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                      attribution="&copy; Google Maps"
+                      maxNativeZoom={20}
+                      maxZoom={22}
+                    />
+                  </LayersControl.BaseLayer>
+                  <LayersControl.BaseLayer name="ESRI Satellite">
                     <LayerGroup>
                       <TileLayer
                         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                         attribution="Tiles &copy; Esri &mdash; Source: Esri"
+                        maxNativeZoom={18}
+                        maxZoom={22}
                       />
                       <TileLayer
                         url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                        maxNativeZoom={18}
+                        maxZoom={22}
                       />
                     </LayerGroup>
                   </LayersControl.BaseLayer>
@@ -763,10 +785,15 @@ const DataInput = () => {
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution="&copy; OpenStreetMap"
+                      maxNativeZoom={19}
+                      maxZoom={22}
                     />
                   </LayersControl.BaseLayer>
                 </LayersControl>
                 <MapUpdater bounds={plotBounds} />
+                {activePlot?.points && activePlot.points.length > 2 && (
+                  <Polygon positions={activePlot.points} pathOptions={{ className: 'fill-primary stroke-primary', color: '#2463eb', fillColor: '#2463eb', fillOpacity: 0.4 }} />
+                )}
               </MapContainer>
             </div>
             {formData.latitude ? (

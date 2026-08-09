@@ -1,99 +1,85 @@
-# AgriSmart AI Labs - Full Stack Application
-
-AgriSmart AI Labs is a comprehensive agricultural platform that combines a modern React frontend, a Flask/Python backend, and a suite of Machine Learning models to provide intelligent crop, fertilizer, and irrigation recommendations.
-
-This guide provides end-to-end instructions for setting up and running the full-stack application.
-
----
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed on your machine:
-- **Node.js** (v16 or higher) and **npm**
-- **Python** (3.8 or higher)
-- **Git** (optional, for version control)
+<div align="center">
+  <h1>🌱 AgriSmart AI Labs</h1>
+  <p><strong>An Enterprise-Grade Agricultural Intelligence Platform powered by Machine Learning and Generative AI.</strong></p>
+</div>
 
 ---
 
-## 1. Setting up the Backend & ML Environment
+## 📖 Overview
 
-The backend handles the API requests from the frontend and communicates with the underlying Machine Learning models.
+AgriSmart AI Labs is a comprehensive, full-stack platform designed to provide intelligent, data-driven farming advisory. It seamlessly integrates a modern React frontend with a robust Python/Flask backend, executing multiple concurrent Machine Learning models (Crop Recommendation, Fertilizer Requirement, Irrigation Needs, and Disease Detection) and explaining them through SHAP. 
 
-### Step 1: Create a Virtual Environment
-It is highly recommended to use a Python virtual environment to manage dependencies.
-Open your terminal in the root folder (`Crop Predition`) and run:
-```powershell
-python -m venv venv
-```
+At the core is the **AI Agronomist Deep Dive**, powered by Groq's blazing-fast LLMs, which interprets the ML telemetry and SHAP values into actionable, human-readable farming strategies that can be persistently saved to the database.
 
-### Step 2: Activate the Virtual Environment
-**Windows:**
-```powershell
-.\venv\Scripts\activate
-```
-**Mac/Linux:**
+## ✨ Key Features
+
+- **Concurrent ML Pipelines:** Predicts optimal crops, fertilizers, and irrigation simultaneously using trained ensemble models.
+- **Explainable AI (XAI):** Visualizes *why* the ML model made its prediction using SHAP (Shapley Additive exPlanations) directly in the UI via Recharts.
+- **Generative AI Deep Dive:** Integrates with Groq API (Llama 3) to generate comprehensive lifecycle strategies, economic yields, and farm health scores based on your telemetry.
+- **Interactive Mapping:** Built-in Leaflet maps featuring high-resolution Google Satellite imagery and polygon drawing for accurate plot management and area calculation.
+- **Computer Vision:** Plant disease detection powered by PyTorch (ResNet9).
+- **Persistent Plot Management:** Save your ML results, AI reports, and mapped polygon points to a local database (Mongita) for instant retrieval across sessions.
+- **Interactive UI:** A highly polished, modern React frontend using Tailwind CSS v4, featuring dynamic image fetching, micro-animations, and a responsive Master Dashboard.
+
+## 🏗️ Architecture Stack
+
+- **Frontend:** React, Vite, Tailwind CSS v4, Recharts, React-Leaflet.
+- **Backend:** Python, Flask, Mongita (local MongoDB equivalent).
+- **Machine Learning:** Scikit-Learn, XGBoost, PyTorch, SHAP, Joblib.
+- **Deployment:** Docker & Docker Compose
+
+---
+
+## 🚀 Getting Started (Docker - Recommended)
+
+The easiest way to run this application is via Docker, which completely handles all dependencies (Python, Node, Databases) for you.
+
+### Prerequisites
+- **Docker Desktop** installed on your machine.
+
+### 1. Start the Application
+Open a terminal in the root directory and run:
 ```bash
-source venv/bin/activate
+docker-compose up --build -d
 ```
+*(This may take a few minutes the first time as it downloads the base images and ML dependencies).*
 
-### Step 3: Install Python Dependencies
-With the virtual environment active, install the required packages.
-```powershell
-pip install flask flask-cors pandas numpy scikit-learn xgboost lightgbm catboost joblib shap mongita
-```
-*(Note: If a `requirements.txt` file exists in the `backend` folder, you can run `pip install -r backend/requirements.txt` instead).*
+### 2. Access the Application
+- **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
+- **Backend API Status:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
-### Step 4: Run the Backend Server
-Navigate to the backend directory and start the Flask server:
-```powershell
-cd backend
-python app.py
+### 3. Add API Keys
+To use the AI Deep Dive feature, add your Groq API key to the `docker-compose.yml` file:
+```yaml
+    environment:
+      - PORT=5000
+      - GROQ_API_KEY=your_groq_key_here
 ```
-The backend server will start running on `http://localhost:5000`. Leave this terminal window open.
+Then restart the container (`docker-compose up -d`).
 
 ---
 
-## 2. Setting up the Frontend
+## 💻 Usage & Workflow
 
-The frontend is a modern React application built with Vite, Tailwind CSS v4, and Shadcn UI.
+1. **Dashboard (`/dashboard`):** View aggregate analytics, active plots, and live weather telemetry.
+2. **Data Input (`/input`):** Create a new farm plot. Use the **Map Picker** to search for your location, draw a polygon around your farm to calculate acreage, and click Save.
+3. **Execution:** Click "Run Full Advisory Suite". The frontend dispatches the telemetry to the backend, which concurrently runs the ML models and generates SHAP explanations.
+4. **Advisory (`/advisory`):** View your ML predictions and the top positive/negative feature impacts visually. 
+5. **AI Deep Dive:** Click "Generate AI Deep Dive" to send the SHAP reasoning to the Groq LLM. The AI will output a robust farming strategy. Click "Save to DB" to persist this report.
 
-### Step 1: Open a New Terminal
-Open a **new** terminal window (leave the backend running in the first one) and navigate to the frontend directory:
-```powershell
-cd frontend
+## 📁 Project Structure
+
 ```
-
-### Step 2: Install Node Dependencies
-Install all required npm packages:
-```powershell
-npm install
+├── backend/                  # Flask API Server & Dockerfile
+│   ├── app.py                # Main application routes & ML integration
+│   ├── database.py           # Mongita DB connection layer
+│   └── .mongita/             # Local database storage (Created automatically)
+├── frontend/                 # React Application & Dockerfile
+│   ├── src/                  # React Components & Pages
+│   └── package.json          # Node dependencies
+├── ml/                       # Machine Learning Code & Models
+│   ├── models/               # Pre-trained .pkl and .pth models
+│   └── src/                  # Model training and XAI scripts
+├── docker-compose.yml        # Orchestration file
+└── requirements.txt          # Python dependencies
 ```
-
-### Step 3: Run the Development Server
-Start the Vite development server:
-```powershell
-npm run dev
-```
-The frontend will compile and typically run on `http://localhost:5173`. 
-Open this URL in your web browser to access the AgriSmart AI Labs dashboard.
-
----
-
-## 3. End-to-End Workflow
-
-Once both the backend and frontend servers are running:
-
-1. **Dashboard (`/dashboard`):** View your overall farm analytics.
-2. **Data Input (`/input`):** Enter telemetry data (Nitrogen, Phosphorus, Potassium, pH, etc.) or simulate data.
-3. **Running Models:** When you click "Run Prediction" in the Data Input tab, the frontend sends a REST API request to the Python backend running on port 5000.
-4. **Advisory (`/advisory`):** The backend processes the data using the ML models in the `ml/` directory, calculates SHAP explainability values, and returns the results to the frontend to be visualized in the Advisory dashboard.
-
----
-
-## Troubleshooting
-
-- **CORS Errors:** Ensure the backend is running on port 5000. The frontend makes requests to `http://localhost:5000/api/...`.
-- **Python Module Not Found:** Ensure your virtual environment is activated BEFORE running `python app.py`.
-- **Port Conflicts:** If port 5000 or 5173 is already in use, you may need to stop the conflicting service or configure the apps to use different ports (update the API base URL in `frontend/src/api` if you change the backend port).
-
-For instructions on running just the Machine Learning models via terminal without the web interface, see [RUNNING_ML.md](RUNNING_ML.md).

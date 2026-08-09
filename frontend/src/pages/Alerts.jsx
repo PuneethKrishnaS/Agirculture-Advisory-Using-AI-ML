@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import TopAppBar from '../components/TopAppBar';
 import BottomNavBar from '../components/BottomNavBar';
+import { API_BASE_URL } from '../config';
 
 const Alerts = () => {
   const [activeCategory, setActiveCategory] = useState('All Alerts');
@@ -9,14 +10,14 @@ const Alerts = () => {
   const [markedRead, setMarkedRead] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/alerts')
+    fetch(`${API_BASE_URL}/api/alerts`)
       .then(res => res.json())
       .then(data => setAlerts(data))
       .catch(err => console.error("Error fetching alerts:", err));
   }, []);
 
   const handleDismiss = (id) => {
-    fetch(`http://localhost:5000/api/alerts/${id}/dismiss`, { method: 'POST' })
+    fetch(`${API_BASE_URL}/api/alerts/${id}/dismiss`, { method: 'POST' })
       .then(() => {
         setAlerts(alerts.filter(alert => alert.id !== id));
       })

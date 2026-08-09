@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import TopAppBar from '../components/TopAppBar';
 import BottomNavBar from '../components/BottomNavBar';
 import { usePlotContext } from '../contexts/PlotContext';
+import { API_BASE_URL } from '../config';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -66,7 +67,7 @@ const Advisory = () => {
           temperature: formData.temperature, humidity: formData.humidity,
           ph: formData.ph, rainfall: formData.rainfall
         };
-        const cropRes = await fetch('http://localhost:5000/api/predict_crop', {
+        const cropRes = await fetch(`${API_BASE_URL}/api/predict_crop`, {
           method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(cropPayload)
         }).then(r => r.json());
 
@@ -81,7 +82,7 @@ const Advisory = () => {
           Season: formData.season, Irrigation_Type: formData.irrigationType, Previous_Crop: formData.previousCrop,
           Region: formData.region
         };
-        const fertRes = await fetch('http://localhost:5000/api/predict_fertilizer', {
+        const fertRes = await fetch(`${API_BASE_URL}/api/predict_fertilizer`, {
           method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(fertPayload)
         }).then(r => r.json());
 
@@ -95,7 +96,7 @@ const Advisory = () => {
           Crop_Growth_Stage: formData.cropGrowthStage, Season: formData.season, Irrigation_Type: formData.irrigationType,
           Water_Source: formData.waterSource, Mulching_Used: formData.mulchingUsed, Region: formData.region
         };
-        const irrRes = await fetch('http://localhost:5000/api/predict_irrigation', {
+        const irrRes = await fetch(`${API_BASE_URL}/api/predict_irrigation`, {
           method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(irrPayload)
         }).then(r => r.json());
 
@@ -177,7 +178,7 @@ const Advisory = () => {
           N: formData.nitrogen, P: formData.phosphorus, K: formData.potassium,
           ph: formData.ph, temperature: formData.temperature, rainfall: formData.rainfall
         };
-        const aiRes = await fetch('http://localhost:5000/api/generate_advice', {
+        const aiRes = await fetch(`${API_BASE_URL}/api/generate_advice`, {
           method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(aiPayload)
         }).then(r => r.json()).catch(() => ({ advice: "AI Service Unavailable." }));
 
@@ -197,7 +198,7 @@ const Advisory = () => {
     if (!activePlotId || !results) return;
     setSaveStatus('saving');
     try {
-      const res = await fetch(`http://localhost:5000/api/history/${activePlotId}/advisory`, {
+      const res = await fetch(`${API_BASE_URL}/api/history/${activePlotId}/advisory`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(results)

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents, LayersControl, LayerGroup } from 'react-leaflet';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents, useMap, LayersControl, LayerGroup } from 'react-leaflet';
 import * as turf from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -19,6 +19,88 @@ const MapEventHandler = ({ points, setPoints }) => {
     },
   });
   return null;
+};
+
+const MapSearchControl = () => {
+  const map = useMap();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      L.DomEvent.disableClickPropagation(containerRef.current);
+      L.DomEvent.disableScrollPropagation(containerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!query.trim()) {
+        setResults([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=in&addressdetails=1&limit=5`);
+        const data = await res.json();
+        setResults(data);
+      } catch (err) {
+        console.error(err);
+      }
+      setIsSearching(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const handleSelect = (result) => {
+    const lat = parseFloat(result.lat);
+    const lon = parseFloat(result.lon);
+    map.flyTo([lat, lon], 16, { animate: true, duration: 1.5 });
+    setResults([]);
+    setQuery('');
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      className="absolute top-4 left-1/2 -translate-x-1/2" 
+      style={{ zIndex: 1000, pointerEvents: 'auto' }}
+    >
+      <div className="flex flex-col bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 w-72 md:w-96">
+        <div className="flex items-center">
+          <input 
+            type="text" 
+            placeholder="Search locations in India..." 
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 px-4 py-2 outline-none text-slate-800 text-sm bg-transparent"
+          />
+          <div className="p-2 bg-slate-50 text-slate-600 flex items-center justify-center border-l border-slate-200">
+            <span className={`material-symbols-outlined text-sm ${isSearching ? 'animate-spin' : ''}`}>
+              {isSearching ? 'refresh' : 'search'}
+            </span>
+          </div>
+        </div>
+        {results.length > 0 && (
+          <div className="max-h-60 overflow-y-auto bg-white border-t border-slate-200 shadow-inner">
+            {results.map((res, i) => (
+              <div 
+                key={i} 
+                onClick={() => handleSelect(res)}
+                className="px-4 py-3 hover:bg-slate-100 cursor-pointer text-sm text-slate-700 border-b border-slate-100 last:border-0 transition-colors flex flex-col gap-0.5"
+              >
+                <span className="font-semibold text-slate-900 truncate">{res.name || res.display_name.split(',')[0]}</span>
+                <span className="text-xs text-slate-500 truncate">{res.display_name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 const MapPickerModal = ({ isOpen, onClose, onSave, isMandatory = false }) => {
@@ -89,14 +171,26 @@ const MapPickerModal = ({ isOpen, onClose, onSave, isMandatory = false }) => {
         <div className="flex-1 relative bg-surface-container-lowest">
           <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: '100%', width: '100%' }}>
             <LayersControl position="topright">
-              <LayersControl.BaseLayer checked name="Satellite">
+              <LayersControl.BaseLayer checked name="Google Satellite (High Res)">
+                <TileLayer
+                  url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                  attribution="&copy; Google Maps"
+                  maxNativeZoom={20}
+                  maxZoom={22}
+                />
+              </LayersControl.BaseLayer>
+              <LayersControl.BaseLayer name="ESRI Satellite">
                 <LayerGroup>
                   <TileLayer
                     url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                     attribution="Tiles &copy; Esri &mdash; Source: Esri"
+                    maxNativeZoom={18}
+                    maxZoom={22}
                   />
                   <TileLayer
                     url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                    maxNativeZoom={18}
+                    maxZoom={22}
                   />
                 </LayerGroup>
               </LayersControl.BaseLayer>
@@ -104,9 +198,12 @@ const MapPickerModal = ({ isOpen, onClose, onSave, isMandatory = false }) => {
                 <TileLayer
                   attribution='&copy; OpenStreetMap contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  maxNativeZoom={19}
+                  maxZoom={22}
                 />
               </LayersControl.BaseLayer>
             </LayersControl>
+            <MapSearchControl />
             <MapEventHandler points={points} setPoints={setPoints} />
             
             {points.map((pos, idx) => (
@@ -126,7 +223,7 @@ const MapPickerModal = ({ isOpen, onClose, onSave, isMandatory = false }) => {
             ))}
             
             {points.length > 2 && (
-              <Polygon positions={points} pathOptions={{ color: '#4caf50', fillColor: '#4caf50', fillOpacity: 0.4 }} />
+              <Polygon positions={points} pathOptions={{ className: 'fill-primary stroke-primary', color: '#2463eb', fillColor: '#2463eb', fillOpacity: 0.4 }} />
             )}
           </MapContainer>
 

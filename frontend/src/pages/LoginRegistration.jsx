@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import { useToast } from '../contexts/ToastContext';
 
 const LoginRegistration = () => {
@@ -17,7 +18,7 @@ const LoginRegistration = () => {
     e.preventDefault();
     const endpoint = '/api/auth/login';
     
-    fetch(`http://localhost:5000${endpoint}`, {
+    fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })

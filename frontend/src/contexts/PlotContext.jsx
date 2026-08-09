@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API_BASE_URL } from '../config';
 
 export const PlotContext = createContext();
 
@@ -26,7 +27,7 @@ export const PlotProvider = ({ children }) => {
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/history');
+      const res = await fetch(`${API_BASE_URL}/api/history`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setHistory(data);
@@ -37,6 +38,7 @@ export const PlotProvider = ({ children }) => {
           lat: h.formData?.latitude || '',
           lng: h.formData?.longitude || '',
           area: h.formData?.fieldArea || '',
+          points: h.formData?.points || h.points || null,
           formData: h.formData || null
         }));
         setSavedPlots(loadedPlots);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config';
 import { useToast } from '../contexts/ToastContext';
 
 const RegisterFarmer = () => {
@@ -18,7 +19,7 @@ const RegisterFarmer = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch('http://localhost:5000/api/auth/register', {
+    fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, farmName })

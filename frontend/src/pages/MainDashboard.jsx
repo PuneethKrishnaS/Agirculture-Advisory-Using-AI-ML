@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import TopAppBar from '../components/TopAppBar';
 import BottomNavBar from '../components/BottomNavBar';
+import { API_BASE_URL } from '../config';
 import { usePlotContext } from '../contexts/PlotContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,7 @@ const MainDashboard = () => {
   useEffect(() => {
 
 
-    fetch('http://localhost:5000/api/dashboard_summary')
+    fetch(`${API_BASE_URL}/api/dashboard_summary`)
       .then(res => res.json())
       .then(data => {
         if(data) {

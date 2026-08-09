@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePlotContext } from '../contexts/PlotContext';
+import { API_BASE_URL } from '../config';
 import MapPickerModal from './MapPickerModal';
 import { useToast } from '../contexts/ToastContext';
 
@@ -36,7 +37,7 @@ const PlotGuard = ({ children }) => {
         }
       };
 
-      const res = await fetch('http://localhost:5000/api/save_history', {
+      const res = await fetch(`${API_BASE_URL}/api/save_history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
