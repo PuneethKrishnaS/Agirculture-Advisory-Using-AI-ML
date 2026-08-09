@@ -30,32 +30,95 @@ At the core is the **AI Agronomist Deep Dive**, powered by Groq's blazing-fast L
 
 ---
 
-## 🚀 Getting Started (Docker - Recommended)
+## 🔑 Step 0: Get Your API Keys
 
-The easiest way to run this application is via Docker, which completely handles all dependencies (Python, Node, Databases) for you.
+To use the Generative AI "Deep Dive" capabilities within the application, you must provide a free Groq API key before starting the app.
+
+1. **Get your free API Key** at the [Groq API Console](https://console.groq.com).
+2. Keep this key handy, as you will need to add it to either the `docker-compose.yml` file (for Docker) or a local `.env` file (for Manual Setup) in the steps below.
+
+---
+
+## 🚀 Installation Option 1: Docker (Recommended)
+
+The easiest way to run this application is via Docker, which completely handles all dependencies (Python, Node, Databases) for you automatically.
 
 ### Prerequisites
-- **Docker Desktop** installed on your machine.
+- [**Download & Install Docker Desktop**](https://www.docker.com/products/docker-desktop/)
 
-### 1. Start the Application
-Open a terminal in the root directory and run:
-```bash
-docker-compose up --build -d
-```
-*(This may take a few minutes the first time as it downloads the base images and ML dependencies).*
-
-### 2. Access the Application
-- **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
-- **Backend API Status:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
-
-### 3. Add API Keys
-To use the AI Deep Dive feature, add your Groq API key to the `docker-compose.yml` file:
+### 1. Add your Groq API Key
+Open the `docker-compose.yml` file in the root folder using a text editor. Add your API key under the `backend` environment variables:
 ```yaml
     environment:
       - PORT=5000
       - GROQ_API_KEY=your_groq_key_here
 ```
-Then restart the container (`docker-compose up -d`).
+
+### 2. Start the Application
+Open a terminal in the root directory and run:
+```bash
+docker-compose up --build -d
+```
+*(Note: This may take several minutes the first time as it downloads the base images and large ML dependencies like PyTorch).*
+
+### 3. Access the Application
+- **Frontend Dashboard:** [http://localhost:3000](http://localhost:3000)
+- **Backend API Status:** [http://localhost:5000/api/health](http://localhost:5000/api/health)
+
+---
+
+## 🛠️ Installation Option 2: Manual Setup
+
+If you prefer to run the application directly on your host machine without Docker, follow these explicit instructions. 
+
+### Prerequisites (Version Compatibility is STRICT)
+To ensure the Machine Learning packages (like Pandas 3.0 and PyTorch) compile correctly, you **must** use the following exact versions:
+- [**Node.js (v22.14.0)**](https://nodejs.org/en/download/) and **npm** (v11.6.0+)
+- [**Python (v3.12.6)**](https://www.python.org/downloads/release/python-3126/)
+
+### 1. Add your Groq API Key
+1. Create a new text file named `.env` inside the `backend/` directory.
+2. Add the following line to the `.env` file:
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+### 2. Backend & ML Setup
+Open a terminal in the root directory of the project:
+
+```bash
+# 1. Create a virtual environment
+python -m venv venv
+
+# 2. Activate the virtual environment
+# On Windows (PowerShell):
+.\venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
+
+# 3. Install all required Python dependencies (Flask, PyTorch, ML libraries, etc.)
+pip install -r requirements.txt
+
+# 4. Navigate to the backend folder and run the server
+cd backend
+python app.py
+```
+*The backend will load the PyTorch and Scikit-Learn models into memory and start on `http://localhost:5000`.*
+
+### 3. Frontend Setup
+Open a **new** terminal in the root directory (leave the backend running in the first terminal):
+
+```bash
+# 1. Navigate to the frontend folder
+cd frontend
+
+# 2. Install Node dependencies
+npm install
+
+# 3. Start the Vite development server
+npm run dev
+```
+*The React application will compile and start on `http://localhost:5173`. Open this in your browser.*
 
 ---
 
@@ -65,11 +128,11 @@ Then restart the container (`docker-compose up -d`).
 2. **Data Input (`/input`):** Create a new farm plot. Use the **Map Picker** to search for your location, draw a polygon around your farm to calculate acreage, and click Save.
 3. **Execution:** Click "Run Full Advisory Suite". The frontend dispatches the telemetry to the backend, which concurrently runs the ML models and generates SHAP explanations.
 4. **Advisory (`/advisory`):** View your ML predictions and the top positive/negative feature impacts visually. 
-5. **AI Deep Dive:** Click "Generate AI Deep Dive" to send the SHAP reasoning to the Groq LLM. The AI will output a robust farming strategy. Click "Save to DB" to persist this report.
+5. **AI Deep Dive:** Click "Generate AI Deep Dive" to send the SHAP reasoning to the [Groq LLM](https://groq.com/). The AI will output a robust farming strategy. Click "Save to DB" to persist this report.
 
 ## 📁 Project Structure
 
-```
+```text
 ├── backend/                  # Flask API Server & Dockerfile
 │   ├── app.py                # Main application routes & ML integration
 │   ├── database.py           # Mongita DB connection layer
