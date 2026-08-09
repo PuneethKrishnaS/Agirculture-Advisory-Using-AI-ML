@@ -54,3 +54,21 @@ Study these answers to understand the code logic, the specific libraries importe
 
 **Q10: What are those ANSI color codes at the top of the script?**
 > **Answer:** We use ANSI escape sequences (like `\033[92m` for Green) to format the terminal text. This allows us to print bold text, colored warnings, and background highlights. We also included a check for `platform.system() == 'Windows'` to run `os.system('color')`, which forces the standard Windows Command Prompt to correctly render these colors instead of displaying raw gibberish text.
+
+---
+
+## 🐣 5. Basic & General Concepts (For Non-Technical Examiners)
+
+**Q11: What is Machine Learning in simple terms?**
+> **Answer:** Machine Learning is a way to teach computers to recognize patterns in data without explicitly programming the rules. Instead of writing a rule like "If rainfall is high, plant rice", we feed the computer historical farm data, and it mathematically figures out those rules on its own.
+
+**Q12: Why did you choose an Agriculture topic for a Computer Science project?**
+> **Answer:** Agriculture is one of the most critical sectors in the world, yet many farmers still rely on guesswork or outdated traditional knowledge. By applying Computer Science and AI, we can optimize crop yields, reduce wasted fertilizer, and conserve water, directly solving a major real-world problem.
+
+**Q13: What does the term 'Dataset' mean?**
+> **Answer:** A dataset is essentially a massive spreadsheet of historical information. For example, our crop dataset contains thousands of rows where each row lists a specific soil pH, Nitrogen level, and temperature, along with the crop that grew best in those exact conditions. The model studies this dataset to make future predictions.
+
+**Q14: What is the difference between Python and PyTorch?**
+> **Answer:** 
+> - **Python** is the core programming language we used to write the entire script. 
+> - **PyTorch** is a specific third-party library built *for* Python, developed by Meta (Facebook), which provides all the complex mathematical functions needed to build and train Deep Neural Networks for Computer Vision (like our disease detection model).

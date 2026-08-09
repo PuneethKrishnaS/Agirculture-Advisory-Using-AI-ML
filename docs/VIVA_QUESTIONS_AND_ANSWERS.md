@@ -58,3 +58,24 @@ Study these answers carefully to confidently defend your architecture, technolog
 
 **Q11: How does the Interactive Map feature work?**
 > **Answer:** The map uses the `react-leaflet` library built on top of Leaflet.js. We pull high-resolution satellite map tiles directly from Google Maps' tile servers (`mt1.google.com`). For the polygon drawing, we use a tool called `leaflet-draw`. When the user draws a polygon around their farm, the frontend uses a geometry library to calculate the exact acreage based on the GPS coordinates, which is then fed into our economic yield predictions.
+
+---
+
+## 🐣 5. Basic & General Concepts (For Non-Technical Examiners)
+
+**Q12: What is the main objective of this project?**
+> **Answer:** The main objective is to use Artificial Intelligence to help farmers make better decisions. Instead of guessing what crop to plant or how much fertilizer to use, our system looks at their exact soil health (Nitrogen, Phosphorus, Potassium, pH) and weather conditions to give them scientifically accurate, data-driven advice.
+
+**Q13: What is the difference between Frontend and Backend?**
+> **Answer:** 
+> - **Frontend (React):** This is the user interface that the farmer actually sees and clicks on in their web browser (the dashboard, the map, the charts).
+> - **Backend (Flask):** This is the "brain" running on the server. It receives the farmer's data from the frontend, feeds it into the Machine Learning models, and sends the final predictions back to the screen.
+
+**Q14: What is Machine Learning?**
+> **Answer:** Machine Learning is a branch of AI where we don't explicitly program the computer to follow rules (like "if Nitrogen > 50 then plant Rice"). Instead, we feed the computer historical data, and it learns the hidden mathematical patterns on its own so it can make predictions on new data.
+
+**Q15: Where did you get the dataset to train the models?**
+> **Answer:** The models were trained using historically accurate, publicly available agricultural datasets (such as from Kaggle and government agricultural boards). The datasets contain thousands of rows of soil metrics and weather conditions mapped to the most successful crop or fertilizer for those exact conditions.
+
+**Q16: What is an API?**
+> **Answer:** API stands for Application Programming Interface. It is a bridge that allows two different pieces of software to talk to each other. For example, our React frontend talks to our Flask backend via an API. Also, our Flask backend talks to Groq's Large Language Model over the internet using an external API.
