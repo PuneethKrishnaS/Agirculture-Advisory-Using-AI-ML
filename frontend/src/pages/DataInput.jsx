@@ -92,10 +92,20 @@ const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
           {predictionResult.isGeneratingAdvice ? (
             <div className="flex-1 flex flex-col items-center justify-center text-primary/70 animate-pulse gap-2">
               <span className="material-symbols-outlined animate-spin text-3xl">sync</span>
-              <p className="text-label-md">Generating custom farming strategy...</p>
+              <p className="text-label-md">Generating 4-point AI strategy...</p>
             </div>
-          ) : predictionResult.advice ? (
-            <p className="text-body-md text-on-surface whitespace-pre-wrap">{predictionResult.advice}</p>
+          ) : predictionResult.advice && typeof predictionResult.advice === 'object' ? (
+            <ul className="list-none space-y-4 text-body-md text-on-surface">
+              {Object.entries(predictionResult.advice).map(([key, val]) => (
+                <li key={key} className="flex gap-3">
+                  <span className="material-symbols-outlined text-primary shrink-0">check_circle</span>
+                  <div>
+                    <strong className="block text-primary capitalize mb-1">{key.replace(/_/g, ' ')}</strong>
+                    <span className="text-on-surface-variant">{val}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="text-body-md text-on-surface-variant italic">Failed to generate AI advice.</p>
           )}
@@ -390,6 +400,26 @@ const DataInput = () => {
     }
   };
 
+  const generateAIAdvice = async (type, mlResult, shapData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/generate_advice_4points`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, result: mlResult, shap: shapData })
+      });
+      const data = await res.json();
+      if(data.advice && !data.advice.Error) {
+        setPredictionResult(prev => ({...prev, advice: data.advice, isGeneratingAdvice: false}));
+      } else {
+        setPredictionResult(prev => ({...prev, isGeneratingAdvice: false}));
+        addToast(data.advice?.Error || "Failed to generate AI advice.", "error");
+      }
+    } catch(err) {
+      setPredictionResult(prev => ({...prev, isGeneratingAdvice: false}));
+      console.error(err);
+    }
+  };
+
   const runPrediction = async (type) => {
     let endpoint = '';
     let payload = {};
@@ -471,9 +501,9 @@ const DataInput = () => {
         if(type === 'crop') result = data.recommended_crop;
         if(type === 'fertilizer') result = data.recommended_fertilizer;
         if(type === 'irrigation') result = data.irrigation_need;
-        
         let shap = data.shap_explanation || null;
-        setPredictionResult(prev => ({...prev, [type]: result, shap, isGeneratingAdvice: false}));
+        setPredictionResult(prev => ({...prev, [type]: result, shap, isGeneratingAdvice: true}));
+        generateAIAdvice(type, result, shap);
       }
     } catch(err) {
           console.error(err);

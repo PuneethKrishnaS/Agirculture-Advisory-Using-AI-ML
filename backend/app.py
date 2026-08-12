@@ -508,33 +508,27 @@ def get_dashboard_summary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/generate_advice', methods=['POST'])
-def generate_advice():
+@app.route('/api/generate_advice_4points', methods=['POST'])
+def generate_advice_4points():
     data = request.json
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        return jsonify({"advice": "GROQ_API_KEY environment variable is not set. Please get a free API key from console.groq.com, set it in your environment, and restart the backend."})
+        return jsonify({"advice": {"Error": "GROQ_API_KEY environment variable is not set."}})
 
     prompt = f"""
-    You are an expert agronomist AI. The farmer has a plot with the following conditions:
-    - Crop ML Recommendation: {data.get('crop')} (Key drivers: {data.get('crop_reasoning')})
-    - Fertilizer ML Recommendation: {data.get('fertilizer')} (Key drivers: {data.get('fertilizer_reasoning')})
-    - Irrigation ML Recommendation: {data.get('irrigation')} (Key drivers: {data.get('irrigation_reasoning')})
-    - Soil NPK: {data.get('N')}:{data.get('P')}:{data.get('K')}
-    - Soil pH: {data.get('ph')}
-    - Temperature: {data.get('temperature')}C
-    - Rainfall: {data.get('rainfall')}mm
+    You are an AI agriculture expert. Based on the following ML prediction and data:
+    - Task: {data.get('type')} Prediction
+    - ML Result: {data.get('result')}
+    - Feature Impacts (SHAP): {data.get('shap')}
 
-    You MUST output your answer in valid JSON format. The JSON object must have exactly these 5 keys. 
-    Each key must map to an object containing "title" and "information":
-
-    1. "health_score": {{ "title": "Smart Farm Health Score", "information": "Calculate a Farm Health Score (0-100)... List key metrics (Soil Health, Water Availability, Nutrient Balance) with ✅ or ⚠ emojis." }}
-    2. "reasoning": {{ "title": "AI Reasoning", "information": "Explain in plain English exactly WHY the ML models recommended this specific crop based on the telemetry." }}
-    3. "calendar": {{ "title": "Growth Stage Calendar", "information": "Provide a comprehensive Markdown table detailing every week/phase of the crop lifecycle and what to do." }}
-    4. "pests": {{ "title": "Predictive Pest & Disease Warning", "information": "Predict the top 2 diseases/pests most likely to occur based on weather, and provide prevention tips." }}
-    5. "economics": {{ "title": "Economic & Yield Estimation", "information": "Estimate the yield per hectare and actionable optimization tips for profit." }}
-
-    Ensure every "information" value is a detailed string formatted with Markdown (bolding, bullet points, tables). Return ONLY the JSON object.
+    You MUST provide exactly 4 actionable points of advice related to this result.
+    You MUST output strictly in JSON format using exactly this structure:
+    {{
+      "advise 1": "something related to those ml result",
+      "advise 2": "something related to those ml result",
+      "advise 3": "something related to those ml result",
+      "advise 4": "something related to those ml result"
+    }}
     """
 
     try:
@@ -543,10 +537,9 @@ def generate_advice():
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "openai/gpt-oss-120b",
+            "model": "llama3-8b-8192",
             "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.7,
-            "max_tokens": 2048,
+            "temperature": 0.6,
             "response_format": {"type": "json_object"}
         }
         
@@ -559,11 +552,11 @@ def generate_advice():
                 advice_json = json.loads(advice_str)
                 return jsonify({"advice": advice_json})
             except Exception as e:
-                return jsonify({"advice": f"Failed to parse JSON: {str(e)}", "raw": advice_str}), 500
+                return jsonify({"advice": {"Error": f"Failed to parse JSON: {str(e)}"}})
         else:
-            return jsonify({"advice": f"API Error: {resp.text}"}), 500
+            return jsonify({"advice": {"Error": f"API Error: {resp.text}"}})
     except Exception as e:
-        return jsonify({"advice": f"Error connecting to AI API: {str(e)}"}), 500
+        return jsonify({"advice": {"Error": f"Connection error: {str(e)}"}})
 
 if __name__ == '__main__':
     initialize_models()
