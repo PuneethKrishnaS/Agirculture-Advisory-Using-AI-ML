@@ -30,7 +30,8 @@ const LoginRegistration = () => {
       } else {
         addToast("Login successful!", 'success');
         localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/dashboard');
+        // Force a hard reload so React context and state completely reset for the new user
+        window.location.href = '/dashboard';
       }
     })
     .catch(err => {
