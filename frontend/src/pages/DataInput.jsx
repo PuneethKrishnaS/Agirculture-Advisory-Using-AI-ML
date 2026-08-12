@@ -21,25 +21,25 @@ const getLocalImage = (type, name) => {
 
 const WeatherSection = ({ formData, handleChange }) => (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Temp (°C)</label><input name="temperature" value={formData.temperature} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Humidity (%)</label><input name="humidity" value={formData.humidity} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Rainfall (mm)</label><input name="rainfall" value={formData.rainfall} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Wind (km/h)</label><input name="windSpeed" value={formData.windSpeed} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Temp (°C)</label><input name="temperature" value={formData.temperature} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Humidity (%)</label><input name="humidity" value={formData.humidity} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Rainfall (mm)</label><input name="rainfall" value={formData.rainfall} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Wind (km/h)</label><input name="windSpeed" value={formData.windSpeed} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
   </div>
 );
 
 const SoilNPKSection = ({ formData, handleChange }) => (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Nitrogen (N)</label><input name="nitrogen" value={formData.nitrogen} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Phosphorus (P)</label><input name="phosphorus" value={formData.phosphorus} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Potassium (K)</label><input name="potassium" value={formData.potassium} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil pH</label><input name="ph" value={formData.ph} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Nitrogen (N)</label><input name="nitrogen" value={formData.nitrogen} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Phosphorus (P)</label><input name="phosphorus" value={formData.phosphorus} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Potassium (K)</label><input name="potassium" value={formData.potassium} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil pH</label><input name="ph" value={formData.ph} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
   </div>
 );
 
 const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
   if (!result) return null;
-  
+
   // Backend sends shap as a pre-sorted array: [["feature1", 0.5], ["feature2", -0.2]]
   const shapEntries = Array.isArray(predictionResult.shap) ? predictionResult.shap.slice(0, 5) : [];
   const chartData = shapEntries.map(([name, val]) => ({ name, value: Number(val) }));
@@ -55,7 +55,7 @@ const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
         </div>
       </div>
       <div className="p-6 bg-surface grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+
         {/* SHAP Chart */}
         {shapEntries.length > 0 ? (
           <div>
@@ -66,9 +66,9 @@ const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                  <XAxis type="number" tick={{fontSize: 12}} />
-                  <YAxis dataKey="name" type="category" tick={{fontSize: 12}} width={110} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{fill: 'rgba(0,0,0,0.05)'}} formatter={(value) => Number(value).toFixed(4)} />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} width={110} axisLine={false} tickLine={false} />
+                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} formatter={(value) => Number(value).toFixed(4)} />
                   <Bar dataKey="value" radius={4} barSize={24}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.value > 0 ? '#10b981' : '#ef4444'} />
@@ -125,7 +125,7 @@ const MapUpdater = ({ bounds }) => {
       // Free the map constraints so we can fly to a new plot
       map.setMinZoom(0);
       map.setMaxBounds(null);
-      
+
       // Fit bounds perfectly to the polygon or points, fully zoomed
       map.fitBounds(bounds, { maxZoom: 20, animate: true, padding: [10, 10] });
     }
@@ -148,7 +148,7 @@ const DataInput = () => {
     latitude: '',
     longitude: '',
     fieldArea: '15',
-    
+
     // Environmental/Weather
     temperature: '24.5',
     humidity: '65',
@@ -221,12 +221,12 @@ const DataInput = () => {
 
       // Fetch live weather when the plot changes, so we always have fresh data
       if (currentLat && currentLng && lastFetchedPlotId.current !== activePlotId) {
-         lastFetchedPlotId.current = activePlotId;
-         // Note: We use setTimeout to allow formData state to settle before fetchWeather 
-         // overwrites the weather specific fields in formData.
-         setTimeout(() => {
-           fetchWeatherForLocation(currentLat, currentLng);
-         }, 0);
+        lastFetchedPlotId.current = activePlotId;
+        // Note: We use setTimeout to allow formData state to settle before fetchWeather 
+        // overwrites the weather specific fields in formData.
+        setTimeout(() => {
+          fetchWeatherForLocation(currentLat, currentLng);
+        }, 0);
       }
     }
   }, [activePlotId, activePlot]);
@@ -242,7 +242,7 @@ const DataInput = () => {
   });
 
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const fetchWeatherForLocation = async (lat, lng) => {
@@ -250,8 +250,8 @@ const DataInput = () => {
     try {
       const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m`);
       const data = await res.json();
-      
-      if(data && data.current) {
+
+      if (data && data.current) {
         setFormData(prev => ({
           ...prev,
           temperature: data.current.temperature_2m.toString(),
@@ -279,7 +279,7 @@ const DataInput = () => {
       addToast("Creating new plot in database...", "info");
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      
+
       const payload = {
         userId: user ? user.id : '',
         location: newName,
@@ -301,20 +301,20 @@ const DataInput = () => {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      
-      if(data.success) {
+
+      if (data.success) {
         const newId = data.record.id;
         await fetchHistory(); // Wait for fetchHistory to update everything
         setActivePlotId(newId);
-        
-        setFormData(prev => ({ 
-          ...prev, 
+
+        setFormData(prev => ({
+          ...prev,
           fieldArea: newArea,
           latitude: newLat,
           longitude: newLng,
           plotName: newName
         }));
-        
+
         addToast("Plot created successfully! Fetching realtime weather data...", "success");
         await fetchWeatherForLocation(newLat, newLng);
       } else {
@@ -335,11 +335,11 @@ const DataInput = () => {
       addToast("Please select or create a plot first.", "error");
       return;
     }
-    
+
     const currentResult = predictionResult[activeTab];
     const status = currentResult ? currentResult : "Saved";
     const typeLabel = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
-    
+
     const snapshotStr = JSON.stringify({ activePlotId, activeTab, status });
     if (lastSavedSnapshot === snapshotStr) {
       addToast("This exact analysis is already saved!", "info");
@@ -350,7 +350,7 @@ const DataInput = () => {
       addToast("Saving plot profile and metrics to Database...", "info");
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      
+
       const payload = {
         id: activePlotId,
         userId: user ? user.id : '',
@@ -367,8 +367,8 @@ const DataInput = () => {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      
-      if(data.success) {
+
+      if (data.success) {
         addToast("Successfully saved plot data to MongoDB!", "success");
         setLastSavedSnapshot(snapshotStr);
         fetchHistory();
@@ -382,20 +382,20 @@ const DataInput = () => {
 
   const handleDeleteRecord = async (e, recordId) => {
     e.stopPropagation(); // prevent row click from triggering
-    if(!window.confirm("Are you sure you want to delete this record?")) return;
-    
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/history/${recordId}`, {
         method: 'DELETE'
       });
       const data = await res.json();
-      if(data.success) {
+      if (data.success) {
         addToast("Record deleted successfully.", "success");
         fetchHistory();
       } else {
         addToast("Failed to delete record.", "error");
       }
-    } catch(err) {
+    } catch (err) {
       addToast("Failed to connect to backend.", "error");
     }
   };
@@ -408,14 +408,14 @@ const DataInput = () => {
         body: JSON.stringify({ type, result: mlResult, shap: shapData })
       });
       const data = await res.json();
-      if(data.advice && !data.advice.Error) {
-        setPredictionResult(prev => ({...prev, advice: data.advice, isGeneratingAdvice: false}));
+      if (data.advice && !data.advice.Error) {
+        setPredictionResult(prev => ({ ...prev, advice: data.advice, isGeneratingAdvice: false }));
       } else {
-        setPredictionResult(prev => ({...prev, isGeneratingAdvice: false}));
+        setPredictionResult(prev => ({ ...prev, isGeneratingAdvice: false }));
         addToast(data.advice?.Error || "Failed to generate AI advice.", "error");
       }
-    } catch(err) {
-      setPredictionResult(prev => ({...prev, isGeneratingAdvice: false}));
+    } catch (err) {
+      setPredictionResult(prev => ({ ...prev, isGeneratingAdvice: false }));
       console.error(err);
     }
   };
@@ -456,27 +456,27 @@ const DataInput = () => {
         Water_Source: formData.waterSource, Mulching_Used: formData.mulchingUsed, Region: formData.region
       };
     } else if (type === 'disease') {
-      if(formData.diseaseImages.length === 0) {
+      if (formData.diseaseImages.length === 0) {
         addToast("Please upload an image of the crop first.", "error");
         return;
       }
-      
+
       addToast(`Analyzing image for diseases...`, "info", 1000);
-      setPredictionResult(prev => ({...prev, disease: null, shap: null, advice: null, isGeneratingAdvice: false}));
-      
+      setPredictionResult(prev => ({ ...prev, disease: null, shap: null, advice: null, isGeneratingAdvice: false }));
+
       try {
         const formDataPayload = new FormData();
         formDataPayload.append('image', formData.diseaseImages[0]);
-        
+
         const res = await fetch(`${API_BASE_URL}/api/detect_disease`, {
           method: 'POST',
           body: formDataPayload
         });
         const data = await res.json();
-        
-        if(data.error) addToast("Error: " + data.error, "error");
+
+        if (data.error) addToast("Error: " + data.error, "error");
         else {
-          setPredictionResult(prev => ({...prev, disease: `${data.disease} (${data.confidence})`}));
+          setPredictionResult(prev => ({ ...prev, disease: `${data.disease} (${data.confidence})` }));
         }
       } catch (err) {
         console.error(err);
@@ -486,8 +486,8 @@ const DataInput = () => {
     }
 
     addToast(`Running ${type} AI Model...`, "info", 1000);
-    setPredictionResult(prev => ({...prev, [type]: null, shap: null, advice: null, isGeneratingAdvice: false})); // Clear previous result
-    
+    setPredictionResult(prev => ({ ...prev, [type]: null, shap: null, advice: null, isGeneratingAdvice: false })); // Clear previous result
+
     try {
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
@@ -495,18 +495,18 @@ const DataInput = () => {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if(data.error) addToast("Error: " + data.error, "error");
+      if (data.error) addToast("Error: " + data.error, "error");
       else {
         let result = '';
-        if(type === 'crop') result = data.recommended_crop;
-        if(type === 'fertilizer') result = data.recommended_fertilizer;
-        if(type === 'irrigation') result = data.irrigation_need;
+        if (type === 'crop') result = data.recommended_crop;
+        if (type === 'fertilizer') result = data.recommended_fertilizer;
+        if (type === 'irrigation') result = data.irrigation_need;
         let shap = data.shap_explanation || null;
-        setPredictionResult(prev => ({...prev, [type]: result, shap, isGeneratingAdvice: true}));
+        setPredictionResult(prev => ({ ...prev, [type]: result, shap, isGeneratingAdvice: true }));
         generateAIAdvice(type, result, shap);
       }
-    } catch(err) {
-          console.error(err);
+    } catch (err) {
+      console.error(err);
       addToast("Prediction request failed.", "error");
     }
   };
@@ -541,231 +541,231 @@ const DataInput = () => {
               Enter your telemetry data to trigger machine learning predictions for crop, fertilizer, and irrigation.
             </p>
           </div>
-                  {isFetchingWeather && (
-          <div className="mb-6 p-4 bg-tertiary-container text-on-tertiary-container rounded-xl flex items-center gap-3 animate-pulse">
-            <span className="material-symbols-outlined animate-spin">sync</span>
-            Fetching live satellite telemetry for your coordinates...
-          </div>
-        )}
+          {isFetchingWeather && (
+            <div className="mb-6 p-4 bg-tertiary-container text-on-tertiary-container rounded-xl flex items-center gap-3 animate-pulse">
+              <span className="material-symbols-outlined animate-spin">sync</span>
+              Fetching live satellite telemetry for your coordinates...
+            </div>
+          )}
 
-        {/* Tab Navigation */}
-        <div className="flex overflow-x-auto border-b border-outline-variant mb-8 no-scrollbar">
-          {[
-            { id: 'crop', icon: 'psychology', label: 'Crop Advisory' },
-            { id: 'fertilizer', icon: 'compost', label: 'Fertilizer' },
-            { id: 'irrigation', icon: 'water_drop', label: 'Irrigation' },
-            { id: 'disease', icon: 'bug_report', label: 'Disease Detection' }
-          ].map(tab => (
-            <button 
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-4 whitespace-nowrap transition-all border-b-4 font-label-lg
+          {/* Tab Navigation */}
+          <div className="flex overflow-x-auto border-b border-outline-variant mb-8 no-scrollbar">
+            {[
+              { id: 'crop', icon: 'psychology', label: 'Crop Advisory' },
+              { id: 'fertilizer', icon: 'compost', label: 'Fertilizer' },
+              { id: 'irrigation', icon: 'water_drop', label: 'Irrigation' },
+              { id: 'disease', icon: 'bug_report', label: 'Disease Detection' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-4 whitespace-nowrap transition-all border-b-4 font-label-lg
                 ${activeTab === tab.id ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-on-surface-variant hover:bg-surface-container'}`}
-            >
-              <span className="material-symbols-outlined">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content Containers */}
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
-          
-          {/* 1. Crop Advisory Tab */}
-          {activeTab === 'crop' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-primary">science</span> Soil Composition</h3>
-                <SoilNPKSection formData={formData} handleChange={handleChange} />
-              </div>
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">partly_cloudy_day</span> Environment</h3>
-                <WeatherSection formData={formData} handleChange={handleChange} />
-              </div>
-              <button onClick={() => runPrediction('crop')} className="w-full mt-8 bg-primary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                <span className="material-symbols-outlined">psychology</span> Analyze Optimal Crop
+              >
+                <span className="material-symbols-outlined">{tab.icon}</span>
+                {tab.label}
               </button>
-                <ResultCard 
-                  title="Recommended Crop" 
-                  result={predictionResult.crop} 
-                  imageSrc={getLocalImage('crops', predictionResult.crop)} 
+            ))}
+          </div>
+
+          {/* Tab Content Containers */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
+
+            {/* 1. Crop Advisory Tab */}
+            {activeTab === 'crop' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-primary">science</span> Soil Composition</h3>
+                  <SoilNPKSection formData={formData} handleChange={handleChange} />
+                </div>
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">partly_cloudy_day</span> Environment</h3>
+                  <WeatherSection formData={formData} handleChange={handleChange} />
+                </div>
+                <button onClick={() => runPrediction('crop')} className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
+                  <span className="material-symbols-outlined">psychology</span> Analyze Optimal Crop
+                </button>
+                <ResultCard
+                  title="Recommended Crop"
+                  result={predictionResult.crop}
+                  imageSrc={getLocalImage('crops', predictionResult.crop)}
                   predictionResult={predictionResult}
                 />
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* 2. Fertilizer Tab */}
-          {activeTab === 'fertilizer' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-secondary">compost</span> Soil Details</h3>
-                <SoilNPKSection formData={formData} handleChange={handleChange} />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Moisture (%)</label><input name="moisture" value={formData.moisture} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Organic Carbon</label><input name="organicCarbon" value={formData.organicCarbon} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Conductivity</label><input name="electricalConductivity" value={formData.electricalConductivity} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil Type</label>
-                    <select name="soilType" value={formData.soilType} onChange={handleChange} className="h-10 border rounded px-2"><option>Loamy</option><option>Clay</option><option>Sandy</option><option>Silt</option></select>
+            {/* 2. Fertilizer Tab */}
+            {activeTab === 'fertilizer' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-secondary">compost</span> Soil Details</h3>
+                  <SoilNPKSection formData={formData} handleChange={handleChange} />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Moisture (%)</label><input name="moisture" value={formData.moisture} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Organic Carbon</label><input name="organicCarbon" value={formData.organicCarbon} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Conductivity</label><input name="electricalConductivity" value={formData.electricalConductivity} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil Type</label>
+                      <select name="soilType" value={formData.soilType} onChange={handleChange} className="h-10 border rounded px-2"><option>Loamy</option><option>Clay</option><option>Sandy</option><option>Silt</option></select>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">partly_cloudy_day</span> Environment</h3>
-                <WeatherSection formData={formData} handleChange={handleChange} />
-              </div>
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">grass</span> Crop & Farming History</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Current Crop</label><select name="cropType" value={formData.cropType} onChange={handleChange} className="h-10 border rounded px-2"><option>Wheat</option><option>Rice</option><option>Maize</option><option>Cotton</option><option>Potato</option><option>Sugarcane</option><option>Chickpea</option><option>Kidneybeans</option><option>Pigeonpeas</option><option>Mothbeans</option><option>Mungbean</option><option>Blackgram</option><option>Lentil</option><option>Pomegranate</option><option>Banana</option><option>Mango</option><option>Grapes</option><option>Watermelon</option><option>Muskmelon</option><option>Apple</option><option>Orange</option><option>Papaya</option><option>Coconut</option><option>Jute</option><option>Coffee</option></select></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Growth Stage</label>
-                    <select name="cropGrowthStage" value={formData.cropGrowthStage} onChange={handleChange} className="h-10 border rounded px-2"><option>Sowing</option><option>Vegetative</option><option>Flowering</option><option>Harvest</option><option>Fruiting</option></select>
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">partly_cloudy_day</span> Environment</h3>
+                  <WeatherSection formData={formData} handleChange={handleChange} />
+                </div>
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">grass</span> Crop & Farming History</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Current Crop</label><select name="cropType" value={formData.cropType} onChange={handleChange} className="h-10 border rounded px-2"><option>Wheat</option><option>Rice</option><option>Maize</option><option>Cotton</option><option>Potato</option><option>Sugarcane</option><option>Chickpea</option><option>Kidneybeans</option><option>Pigeonpeas</option><option>Mothbeans</option><option>Mungbean</option><option>Blackgram</option><option>Lentil</option><option>Pomegranate</option><option>Banana</option><option>Mango</option><option>Grapes</option><option>Watermelon</option><option>Muskmelon</option><option>Apple</option><option>Orange</option><option>Papaya</option><option>Coconut</option><option>Jute</option><option>Coffee</option></select></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Growth Stage</label>
+                      <select name="cropGrowthStage" value={formData.cropGrowthStage} onChange={handleChange} className="h-10 border rounded px-2"><option>Sowing</option><option>Vegetative</option><option>Flowering</option><option>Harvest</option><option>Fruiting</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Season</label>
+                      <select name="season" value={formData.season} onChange={handleChange} className="h-10 border rounded px-2"><option>Kharif</option><option>Rabi</option><option>Zaid</option><option>Spring</option><option>Summer</option><option>Autumn</option><option>Winter</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Region</label>
+                      <select name="region" value={formData.region} onChange={handleChange} className="h-10 border rounded px-2"><option>North</option><option>South</option><option>East</option><option>West</option><option>Central</option></select>
+                    </div>
                   </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Season</label>
-                    <select name="season" value={formData.season} onChange={handleChange} className="h-10 border rounded px-2"><option>Kharif</option><option>Rabi</option><option>Zaid</option><option>Spring</option><option>Summer</option><option>Autumn</option><option>Winter</option></select>
-                  </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Region</label>
-                    <select name="region" value={formData.region} onChange={handleChange} className="h-10 border rounded px-2"><option>North</option><option>South</option><option>East</option><option>West</option><option>Central</option></select>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Crop</label><select name="previousCrop" value={formData.previousCrop} onChange={handleChange} className="h-10 border rounded px-2"><option>Wheat</option><option>Rice</option><option>Maize</option><option>Cotton</option><option>Potato</option><option>Sugarcane</option><option>Chickpea</option><option>Kidneybeans</option><option>Pigeonpeas</option><option>Mothbeans</option><option>Mungbean</option><option>Blackgram</option><option>Lentil</option><option>Pomegranate</option><option>Banana</option><option>Mango</option><option>Grapes</option><option>Watermelon</option><option>Muskmelon</option><option>Apple</option><option>Orange</option><option>Papaya</option><option>Coconut</option><option>Jute</option><option>Coffee</option></select></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Irrigation Type</label>
+                      <select name="irrigationType" value={formData.irrigationType} onChange={handleChange} className="h-10 border rounded px-2"><option>Drip</option><option>Sprinkler</option><option>Canal</option><option>Rainfed</option><option>Flood</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Yield (t)</label><input name="yieldLastSeason" value={formData.yieldLastSeason} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Fertilizer (kg)</label><input name="fertilizerLastSeason" value={formData.fertilizerLastSeason} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Crop</label><select name="previousCrop" value={formData.previousCrop} onChange={handleChange} className="h-10 border rounded px-2"><option>Wheat</option><option>Rice</option><option>Maize</option><option>Cotton</option><option>Potato</option><option>Sugarcane</option><option>Chickpea</option><option>Kidneybeans</option><option>Pigeonpeas</option><option>Mothbeans</option><option>Mungbean</option><option>Blackgram</option><option>Lentil</option><option>Pomegranate</option><option>Banana</option><option>Mango</option><option>Grapes</option><option>Watermelon</option><option>Muskmelon</option><option>Apple</option><option>Orange</option><option>Papaya</option><option>Coconut</option><option>Jute</option><option>Coffee</option></select></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Irrigation Type</label>
-                    <select name="irrigationType" value={formData.irrigationType} onChange={handleChange} className="h-10 border rounded px-2"><option>Drip</option><option>Sprinkler</option><option>Canal</option><option>Rainfed</option><option>Flood</option></select>
-                  </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Yield (t)</label><input name="yieldLastSeason" value={formData.yieldLastSeason} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Fertilizer (kg)</label><input name="fertilizerLastSeason" value={formData.fertilizerLastSeason} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-                </div>
-              </div>
-              <button onClick={() => runPrediction('fertilizer')} className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                <span className="material-symbols-outlined">compost</span> Recommend Fertilizer Mix
-              </button>
-                <ResultCard 
-                  title="Recommended Fertilizer" 
-                  result={predictionResult.fertilizer} 
-                  imageSrc={getLocalImage('fertilizers', predictionResult.fertilizer)} 
+                <button onClick={() => runPrediction('fertilizer')} className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
+                  <span className="material-symbols-outlined">compost</span> Recommend Fertilizer Mix
+                </button>
+                <ResultCard
+                  title="Recommended Fertilizer"
+                  result={predictionResult.fertilizer}
+                  imageSrc={getLocalImage('fertilizers', predictionResult.fertilizer)}
                   predictionResult={predictionResult}
                 />
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* 3. Irrigation Tab */}
-          {activeTab === 'irrigation' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-[#0288d1]">water_drop</span> Water & Environment</h3>
-                <WeatherSection formData={formData} handleChange={handleChange} />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Irrigation (mm)</label><input name="previousIrrigation" value={formData.previousIrrigation} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Sunlight (hrs)</label><input name="sunlightHours" value={formData.sunlightHours} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Moisture (%)</label><input name="moisture" value={formData.moisture} onChange={handleChange} className="h-10 border rounded px-2" type="number"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil pH</label><input name="ph" value={formData.ph} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Organic Carbon</label><input name="organicCarbon" value={formData.organicCarbon} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Conductivity</label><input name="electricalConductivity" value={formData.electricalConductivity} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1"/></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil Type</label>
-                    <select name="soilType" value={formData.soilType} onChange={handleChange} className="h-10 border rounded px-2"><option>Loamy</option><option>Clay</option><option>Sandy</option><option>Silt</option></select>
+            {/* 3. Irrigation Tab */}
+            {activeTab === 'irrigation' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-[#0288d1]">water_drop</span> Water & Environment</h3>
+                  <WeatherSection formData={formData} handleChange={handleChange} />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Irrigation (mm)</label><input name="previousIrrigation" value={formData.previousIrrigation} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Sunlight (hrs)</label><input name="sunlightHours" value={formData.sunlightHours} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Moisture (%)</label><input name="moisture" value={formData.moisture} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil pH</label><input name="ph" value={formData.ph} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Organic Carbon</label><input name="organicCarbon" value={formData.organicCarbon} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Conductivity</label><input name="electricalConductivity" value={formData.electricalConductivity} onChange={handleChange} className="h-10 border rounded px-2" type="number" step="0.1" /></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Soil Type</label>
+                      <select name="soilType" value={formData.soilType} onChange={handleChange} className="h-10 border rounded px-2"><option>Loamy</option><option>Clay</option><option>Sandy</option><option>Silt</option></select>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-[#8d6e63]">agriculture</span> Farm Infrastructure & Crop</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Current Crop</label><select name="cropType" value={formData.cropType} onChange={handleChange} className="h-10 border rounded px-2"><option>Wheat</option><option>Rice</option><option>Maize</option><option>Cotton</option><option>Potato</option><option>Sugarcane</option><option>Chickpea</option><option>Kidneybeans</option><option>Pigeonpeas</option><option>Mothbeans</option><option>Mungbean</option><option>Blackgram</option><option>Lentil</option><option>Pomegranate</option><option>Banana</option><option>Mango</option><option>Grapes</option><option>Watermelon</option><option>Muskmelon</option><option>Apple</option><option>Orange</option><option>Papaya</option><option>Coconut</option><option>Jute</option><option>Coffee</option></select></div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Growth Stage</label>
-                    <select name="cropGrowthStage" value={formData.cropGrowthStage} onChange={handleChange} className="h-10 border rounded px-2"><option>Sowing</option><option>Vegetative</option><option>Flowering</option><option>Harvest</option><option>Fruiting</option></select>
+                <div>
+                  <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-[#8d6e63]">agriculture</span> Farm Infrastructure & Crop</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Current Crop</label><select name="cropType" value={formData.cropType} onChange={handleChange} className="h-10 border rounded px-2"><option>Wheat</option><option>Rice</option><option>Maize</option><option>Cotton</option><option>Potato</option><option>Sugarcane</option><option>Chickpea</option><option>Kidneybeans</option><option>Pigeonpeas</option><option>Mothbeans</option><option>Mungbean</option><option>Blackgram</option><option>Lentil</option><option>Pomegranate</option><option>Banana</option><option>Mango</option><option>Grapes</option><option>Watermelon</option><option>Muskmelon</option><option>Apple</option><option>Orange</option><option>Papaya</option><option>Coconut</option><option>Jute</option><option>Coffee</option></select></div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Growth Stage</label>
+                      <select name="cropGrowthStage" value={formData.cropGrowthStage} onChange={handleChange} className="h-10 border rounded px-2"><option>Sowing</option><option>Vegetative</option><option>Flowering</option><option>Harvest</option><option>Fruiting</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Season</label>
+                      <select name="season" value={formData.season} onChange={handleChange} className="h-10 border rounded px-2"><option>Kharif</option><option>Rabi</option><option>Zaid</option><option>Spring</option><option>Summer</option><option>Autumn</option><option>Winter</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Region</label>
+                      <select name="region" value={formData.region} onChange={handleChange} className="h-10 border rounded px-2"><option>North</option><option>South</option><option>East</option><option>West</option><option>Central</option></select>
+                    </div>
                   </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Season</label>
-                    <select name="season" value={formData.season} onChange={handleChange} className="h-10 border rounded px-2"><option>Kharif</option><option>Rabi</option><option>Zaid</option><option>Spring</option><option>Summer</option><option>Autumn</option><option>Winter</option></select>
-                  </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Region</label>
-                    <select name="region" value={formData.region} onChange={handleChange} className="h-10 border rounded px-2"><option>North</option><option>South</option><option>East</option><option>West</option><option>Central</option></select>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Water Source</label>
+                      <select name="waterSource" value={formData.waterSource} onChange={handleChange} className="h-10 border rounded px-2"><option>Well</option><option>River</option><option>Groundwater</option><option>Reservoir</option><option>Rainwater</option><option>Municipal</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Irrigation Type</label>
+                      <select name="irrigationType" value={formData.irrigationType} onChange={handleChange} className="h-10 border rounded px-2"><option>Drip</option><option>Sprinkler</option><option>Canal</option><option>Rainfed</option><option>Flood</option></select>
+                    </div>
+                    <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Mulching</label>
+                      <select name="mulchingUsed" value={formData.mulchingUsed} onChange={handleChange} className="h-10 border rounded px-2"><option>Yes</option><option>No</option></select>
+                    </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Water Source</label>
-                    <select name="waterSource" value={formData.waterSource} onChange={handleChange} className="h-10 border rounded px-2"><option>Well</option><option>River</option><option>Groundwater</option><option>Reservoir</option><option>Rainwater</option><option>Municipal</option></select>
-                  </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Irrigation Type</label>
-                    <select name="irrigationType" value={formData.irrigationType} onChange={handleChange} className="h-10 border rounded px-2"><option>Drip</option><option>Sprinkler</option><option>Canal</option><option>Rainfed</option><option>Flood</option></select>
-                  </div>
-                  <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Mulching</label>
-                    <select name="mulchingUsed" value={formData.mulchingUsed} onChange={handleChange} className="h-10 border rounded px-2"><option>Yes</option><option>No</option></select>
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => runPrediction('irrigation')} className="w-full mt-8 bg-[#0288d1] text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                <span className="material-symbols-outlined">water_drop</span> Calculate Irrigation Needs
-              </button>
-                <ResultCard 
-                  title="Irrigation Analysis" 
-                  result={predictionResult.irrigation} 
-                  imageSrc={getLocalImage('irrigation', formData.irrigationType || 'water')} 
+                <button onClick={() => runPrediction('irrigation')} className="w-full mt-8 bg-[#0288d1] text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
+                  <span className="material-symbols-outlined">water_drop</span> Calculate Irrigation Needs
+                </button>
+                <ResultCard
+                  title="Irrigation Analysis"
+                  result={predictionResult.irrigation}
+                  imageSrc={getLocalImage('irrigation', formData.irrigationType || 'water')}
                   predictionResult={predictionResult}
                 />
-            </div>
-          )}
+              </div>
+            )}
 
-          {/* 4. Disease Detection Tab */}
-          {activeTab === 'disease' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="bg-surface-container border-2 border-dashed border-outline-variant rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-                <div className="w-20 h-20 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-4xl">add_a_photo</span>
-                </div>
-                <h3 className="text-headline-sm font-bold mb-2">Upload Crop Image</h3>
-                <p className="text-body-md text-on-surface-variant max-w-md">Upload high-resolution images of crop leaves to run deep learning disease detection models.</p>
-                <input 
-                  type="file" 
-                  className="mt-6 block w-full max-w-xs text-sm text-on-surface-variant
+            {/* 4. Disease Detection Tab */}
+            {activeTab === 'disease' && (
+              <div className="space-y-6 animate-in fade-in duration-300">
+                <div className="bg-surface-container border-2 border-dashed border-outline-variant rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-4">
+                    <span className="material-symbols-outlined text-4xl">add_a_photo</span>
+                  </div>
+                  <h3 className="text-headline-sm font-bold mb-2">Upload Crop Image</h3>
+                  <p className="text-body-md text-on-surface-variant max-w-md">Upload high-resolution images of crop leaves to run deep learning disease detection models.</p>
+                  <input
+                    type="file"
+                    className="mt-6 block w-full max-w-xs text-sm text-on-surface-variant
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
                     file:text-sm file:font-semibold
                     file:bg-primary file:text-white
                     hover:file:bg-primary/90 cursor-pointer"
-                  onChange={(e) => {
-                    if(e.target.files.length > 0) {
-                      setFormData({...formData, diseaseImages: [e.target.files[0]]});
-                      addToast("Image staged for analysis.", "info");
-                    }
-                  }}
+                    onChange={(e) => {
+                      if (e.target.files.length > 0) {
+                        setFormData({ ...formData, diseaseImages: [e.target.files[0]] });
+                        addToast("Image staged for analysis.", "info");
+                      }
+                    }}
+                  />
+                </div>
+                <button onClick={() => runPrediction('disease')} className="bg-secondary w-full mt-4 bg-error text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
+                  <span className="material-symbols-outlined">bug_report</span> Run Disease Scan
+                </button>
+                <ResultCard
+                  title="Disease Detection Analysis"
+                  result={predictionResult.disease}
+                  imageSrc={formData.diseaseImages[0] ? URL.createObjectURL(formData.diseaseImages[0]) : null}
+                  predictionResult={predictionResult}
                 />
               </div>
-              <button onClick={() => runPrediction('disease')} className="w-full mt-4 bg-error text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                <span className="material-symbols-outlined">bug_report</span> Run Disease Scan
+            )}
+
+            <div className="pt-6 border-t border-border mt-8">
+              <button
+                onClick={handleSaveToDB}
+                className="w-full bg-primary text-primary-foreground h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all active:scale-95"
+              >
+                <span className="material-symbols-outlined">save</span>
+                Update Current Plot Record
               </button>
-              <ResultCard 
-                title="Disease Detection Analysis" 
-                result={predictionResult.disease} 
-                imageSrc={formData.diseaseImages[0] ? URL.createObjectURL(formData.diseaseImages[0]) : null} 
-                predictionResult={predictionResult}
-              />
             </div>
-          )}
-          
-          <div className="pt-6 border-t border-border mt-8">
-            <button 
-              onClick={handleSaveToDB}
-              className="w-full bg-primary text-primary-foreground h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all active:scale-95"
-            >
-              <span className="material-symbols-outlined">save</span>
-              Update Current Plot Record
-            </button>
+
           </div>
-          
-        </div>
         </div>
 
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1 space-y-8">
-          
+
           {/* Plot Selection */}
           <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-6 mb-6">
             <h3 className="text-title-lg font-bold mb-4">Plot Management</h3>
             <div className="flex flex-col gap-4">
               <div className="relative w-full">
-                <select 
-                  value={activePlotId} 
+                <select
+                  value={activePlotId}
                   onChange={handlePlotSelect}
                   className="w-full appearance-none bg-surface-container-lowest border border-outline-variant text-on-surface text-label-lg rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-secondary focus:outline-none cursor-pointer"
                 >
@@ -775,7 +775,7 @@ const DataInput = () => {
                 </select>
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">arrow_drop_down</span>
               </div>
-              <button 
+              <button
                 onClick={() => setIsMapOpen(true)}
                 className="w-full bg-secondary text-white h-12 px-5 rounded-xl shadow-md hover:brightness-110 flex items-center justify-center gap-2 font-medium"
               >
@@ -848,7 +848,7 @@ const DataInput = () => {
               </div>
               <button className="text-primary text-label-sm font-bold hover:underline">View All</button>
             </div>
-            
+
             <div className="space-y-4">
               {history.slice(0, 4).map((item, idx) => (
                 <div key={idx} onClick={() => handlePlotSelect({ target: { value: item.id } })} className="flex gap-4 items-start p-3 hover:bg-surface-container rounded-xl transition-colors cursor-pointer group">
@@ -867,7 +867,7 @@ const DataInput = () => {
               {history.length === 0 && <p className="text-label-sm text-on-surface-variant">No recent activity.</p>}
             </div>
           </div>
-          
+
         </div>
       </main>
 
