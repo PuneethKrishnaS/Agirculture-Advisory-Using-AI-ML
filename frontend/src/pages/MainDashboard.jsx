@@ -35,9 +35,11 @@ const MainDashboard = () => {
   const totalPlots = history?.length || 0;
 
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userId = user ? user.id : '';
 
-
-    fetch(`${API_BASE_URL}/api/dashboard_summary`)
+    fetch(`${API_BASE_URL}/api/dashboard_summary?user_id=${userId}`)
       .then(res => res.json())
       .then(data => {
         if(data) {

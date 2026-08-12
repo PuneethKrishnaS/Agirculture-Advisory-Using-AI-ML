@@ -27,7 +27,11 @@ export const PlotProvider = ({ children }) => {
   const fetchHistory = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/history`);
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user ? user.id : '';
+      
+      const res = await fetch(`${API_BASE_URL}/api/history?user_id=${userId}`);
       const data = await res.json();
       if (Array.isArray(data)) {
         setHistory(data);

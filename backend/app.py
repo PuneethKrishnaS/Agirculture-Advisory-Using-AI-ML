@@ -330,8 +330,13 @@ def get_history():
     try:
         db = get_db_connection()
         history_col = db.history
-        # Mongita sometimes has issues with projection dicts, filter in python
-        records = list(history_col.find({}))
+        
+        user_id = request.args.get('user_id')
+        query = {}
+        if user_id:
+            query['user_id'] = user_id
+            
+        records = list(history_col.find(query))
         for r in records:
             if '_id' in r:
                 r['id'] = str(r.pop('_id'))
@@ -349,6 +354,7 @@ def save_history():
         history_col = db.history
         
         record = {
+            "user_id": data.get("userId"),
             "timestamp": datetime.now().strftime("%b %d, %I:%M %p"),
             "location": data.get("location", "Unknown Location"),
             "type": data.get("type", "Manual"),
@@ -426,7 +432,13 @@ def get_dashboard_summary():
     try:
         db = get_db_connection()
         history_col = db.history
-        all_plots = list(history_col.find({}))
+        
+        user_id = request.args.get('user_id')
+        query = {}
+        if user_id:
+            query['user_id'] = user_id
+            
+        all_plots = list(history_col.find(query))
         for p in all_plots:
             p.pop('_id', None)
             

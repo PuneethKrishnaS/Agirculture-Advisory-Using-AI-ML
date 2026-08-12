@@ -267,8 +267,11 @@ const DataInput = () => {
 
     try {
       addToast("Creating new plot in database...", "info");
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
       
       const payload = {
+        userId: user ? user.id : '',
         location: newName,
         type: "New Plot Profile",
         status: "Created",
@@ -335,9 +338,12 @@ const DataInput = () => {
 
     try {
       addToast("Saving plot profile and metrics to Database...", "info");
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
       
       const payload = {
         id: activePlotId,
+        userId: user ? user.id : '',
         location: formData.plotName || "Unknown Plot",
         type: `${typeLabel} Analysis`,
         npk: `${formData.nitrogen}:${formData.phosphorus}:${formData.potassium}`,

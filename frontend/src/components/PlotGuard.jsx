@@ -24,8 +24,11 @@ const PlotGuard = ({ children }) => {
 
     try {
       addToast("Creating your first plot...", "info");
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
       
       const payload = {
+        userId: user ? user.id : '',
         location: newName,
         type: "New Plot Profile",
         status: "Created",
