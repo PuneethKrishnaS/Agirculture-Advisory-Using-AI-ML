@@ -537,7 +537,7 @@ def generate_advice_4points():
             "Content-Type": "application/json"
         }
         payload = {
-            "model": "llama3-8b-8192",
+            "model": "openai/gpt-oss-120b",
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.6,
             "response_format": {"type": "json_object"}
