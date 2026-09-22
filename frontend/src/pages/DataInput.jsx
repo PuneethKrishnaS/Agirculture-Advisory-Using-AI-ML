@@ -10,13 +10,31 @@ import MapPickerModal from '../components/MapPickerModal';
 import TopAppBar from '../components/TopAppBar';
 import BottomNavBar from '../components/BottomNavBar';
 
-const getLocalImage = (type, name) => {
-  if (!name) {
-    if (type === 'irrigation') return '/images/irrigation/water.jpg';
-    return '';
+const cropImages = import.meta.glob('../assets/cropsImages/*.png', { eager: true, import: 'default' });
+const fertilizerImages = import.meta.glob('../assets/fertilizersImages/*.png', { eager: true, import: 'default' });
+const waterImages = import.meta.glob('../assets/waterLevel/*.png', { eager: true, import: 'default' });
+
+const getAssetImage = (type, name) => {
+  if (!name) return null;
+  const cleanName = name.toString().trim().toLowerCase().replace(/[_\s\-]+/g, '');
+
+  if (type === 'crops' || type === 'crop') {
+    for (const [path, src] of Object.entries(cropImages)) {
+      const fileName = path.split('/').pop().replace(/\.png$/i, '').toLowerCase().replace(/[_\s\-]+/g, '');
+      if (fileName === cleanName) return src;
+    }
+  } else if (type === 'fertilizers' || type === 'fertilizer') {
+    for (const [path, src] of Object.entries(fertilizerImages)) {
+      const fileName = path.split('/').pop().replace(/\.png$/i, '').toLowerCase().replace(/[_\s\-]+/g, '');
+      if (fileName === cleanName) return src;
+    }
+  } else if (type === 'irrigation' || type === 'water') {
+    for (const [path, src] of Object.entries(waterImages)) {
+      const fileName = path.split('/').pop().replace(/\.png$/i, '').toLowerCase().replace(/[_\s\-]+/g, '');
+      if (fileName === cleanName) return src;
+    }
   }
-  const sanitized = name.toString().replace(/ /g, '_').toLowerCase();
-  return `/images/${type}/${sanitized}.jpg`;
+  return null;
 };
 
 const WeatherSection = ({ formData, handleChange }) => (
@@ -37,32 +55,93 @@ const SoilNPKSection = ({ formData, handleChange }) => (
   </div>
 );
 
-const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
+const ResultCard = ({ title, result, imageSrc, predictionResult, type }) => {
   if (!result) return null;
 
-  // Backend sends shap as a pre-sorted array: [["feature1", 0.5], ["feature2", -0.2]]
+  const isDisease = type === 'disease';
   const shapEntries = Array.isArray(predictionResult.shap) ? predictionResult.shap.slice(0, 5) : [];
   const chartData = shapEntries.map(([name, val]) => ({ name, value: Number(val) }));
 
-  return (
-    <div className="mt-8 bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
-      <div className="h-48 w-full relative">
-        <img src={imageSrc} alt={result} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-        <div className="absolute bottom-4 left-6">
-          <p className="text-label-md text-white/80 font-bold tracking-widest uppercase mb-1">{title}</p>
-          <h4 className="text-display-sm font-display-sm text-white capitalize">{result.replace(/_/g, ' ')}</h4>
+  let iconName = 'psychology';
+  let badgeBg = 'bg-primary/10 text-primary border-primary/20';
+  if (type === 'fertilizer') {
+    iconName = 'compost';
+    badgeBg = 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+  } else if (type === 'irrigation') {
+    iconName = 'water_drop';
+    badgeBg = 'bg-sky-500/10 text-sky-600 border-sky-500/20';
+  } else if (type === 'disease') {
+    iconName = 'pest_control';
+    badgeBg = 'bg-rose-500/10 text-rose-600 border-rose-500/20';
+  }
+
+  if (isDisease) {
+    return (
+      <div className="mt-8 bg-surface-container-low rounded-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
+        <div className="p-6 bg-surface-container flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+              <span className="material-symbols-outlined text-2xl">{iconName}</span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block">{title}</span>
+              <h4 className="text-2xl font-black text-on-surface capitalize tracking-tight">{result.replace(/_/g, ' ')}</h4>
+            </div>
+          </div>
+          <div className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-1.5 ${badgeBg}`}>
+            <span className="material-symbols-outlined text-base">pest_control</span>
+            <span>Identified Diagnosis</span>
+          </div>
+        </div>
+
+        <div className="p-6 flex items-center justify-center">
+          <div className="w-full max-w-lg h-72 md:h-80 flex items-center justify-center overflow-hidden">
+            {imageSrc ? (
+              <img
+                src={imageSrc}
+                alt={result}
+                className="max-h-full max-w-full object-contain rounded-xl"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-on-surface-variant gap-2">
+                <span className="material-symbols-outlined text-6xl opacity-40">pest_control</span>
+                <span className="text-sm font-medium capitalize">{result.replace(/_/g, ' ')}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <div className="p-6 bg-surface grid grid-cols-1 md:grid-cols-2 gap-8">
+    );
+  }
 
-        {/* SHAP Chart */}
-        {shapEntries.length > 0 ? (
+  return (
+    <div className="mt-8 bg-surface-container-low rounded-2xl animate-in slide-in-from-bottom-4 duration-500 space-y-6 p-6">
+      {/* Header & Result Summary */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <span className="material-symbols-outlined text-2xl">{iconName}</span>
+          </div>
           <div>
-            <h5 className="text-title-md font-bold mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">bar_chart</span> ML Feature Importance
-            </h5>
-            <div className="w-full mt-2" style={{ height: '300px' }}>
+            <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider block">{title}</span>
+            <h4 className="text-2xl font-black text-on-surface capitalize tracking-tight">{result.replace(/_/g, ' ')}</h4>
+          </div>
+        </div>
+        <div className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-1.5 ${badgeBg}`}>
+          <span className="material-symbols-outlined text-base">verified</span>
+          <span>Recommended Optimal</span>
+        </div>
+      </div>
+
+      {/* Top Row: ML Feature Importance (Left) and Image (Right) Side-by-Side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-surface-container-low p-2">
+        {/* Left Side: ML Feature Importance */}
+        <div>
+          <h5 className="text-title-md font-bold mb-3 flex items-center gap-2 text-on-surface">
+            <span className="material-symbols-outlined text-primary">bar_chart</span> ML Feature Importance
+          </h5>
+          {shapEntries.length > 0 ? (
+            <div className="w-full" style={{ height: '280px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
@@ -77,40 +156,55 @@ const ResultCard = ({ title, result, imageSrc, predictionResult }) => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-on-surface-variant text-body-md border-2 border-dashed border-outline-variant rounded-xl p-4">
-            <span className="material-symbols-outlined mr-2">info</span> No explainability data available for this model.
-          </div>
-        )}
-
-        {/* AI Advice */}
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 flex flex-col">
-          <h5 className="text-title-md font-bold text-primary mb-3 flex items-center gap-2">
-            <span className="material-symbols-outlined">auto_awesome</span> Expert AI Advice
-          </h5>
-          {predictionResult.isGeneratingAdvice ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-primary/70 animate-pulse gap-2">
-              <span className="material-symbols-outlined animate-spin text-3xl">sync</span>
-              <p className="text-label-md">Generating 4-point AI strategy...</p>
-            </div>
-          ) : predictionResult.advice && typeof predictionResult.advice === 'object' ? (
-            <ul className="list-none space-y-4 text-body-md text-on-surface">
-              {Object.entries(predictionResult.advice).map(([key, val]) => (
-                <li key={key} className="flex gap-3">
-                  <span className="material-symbols-outlined text-primary shrink-0">check_circle</span>
-                  <div>
-                    <strong className="block text-primary capitalize mb-1">{key.replace(/_/g, ' ')}</strong>
-                    <span className="text-on-surface-variant">{val}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
           ) : (
-            <p className="text-body-md text-on-surface-variant italic">Failed to generate AI advice.</p>
+            <div className="flex items-center justify-center h-[280px] text-on-surface-variant text-body-md p-4">
+              <span className="material-symbols-outlined mr-2">info</span> No explainability data available for this model.
+            </div>
           )}
         </div>
 
+        {/* Right Side: Seamless Blended Image without shadow, hover effects, or borders */}
+        <div className="w-full h-[280px] flex items-center justify-center">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={result}
+              className="max-h-full max-w-full object-contain mix-blend-multiply dark:mix-blend-normal"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-on-surface-variant gap-2">
+              <span className="material-symbols-outlined text-6xl opacity-40">{iconName}</span>
+              <span className="text-sm font-medium capitalize">{result.replace(/_/g, ' ')}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Row: Expert AI Advice (Full Width) */}
+      <div className="bg-primary/5 rounded-2xl p-6">
+        <h5 className="text-title-md font-bold text-primary mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined">auto_awesome</span> Expert AI Advice
+        </h5>
+        {predictionResult.isGeneratingAdvice ? (
+          <div className="py-8 flex flex-col items-center justify-center text-primary/70 animate-pulse gap-2">
+            <span className="material-symbols-outlined animate-spin text-3xl">sync</span>
+            <p className="text-label-md">Generating 4-point AI strategy...</p>
+          </div>
+        ) : predictionResult.advice && typeof predictionResult.advice === 'object' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(predictionResult.advice).map(([key, val]) => (
+              <div key={key} className="flex gap-3 bg-surface/80 p-4 rounded-xl">
+                <span className="material-symbols-outlined text-primary shrink-0 mt-0.5">check_circle</span>
+                <div>
+                  <strong className="block text-primary capitalize mb-1">{key.replace(/_/g, ' ')}</strong>
+                  <span className="text-on-surface text-body-sm leading-relaxed">{val}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-body-md text-on-surface-variant italic">Failed to generate AI advice.</p>
+        )}
       </div>
     </div>
   );
@@ -140,6 +234,15 @@ const DataInput = () => {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
   const [lastSavedSnapshot, setLastSavedSnapshot] = useState(null);
+  const [loadingPredictionType, setLoadingPredictionType] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [diseasePreviewUrl, setDiseasePreviewUrl] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      if (diseasePreviewUrl) URL.revokeObjectURL(diseasePreviewUrl);
+    };
+  }, [diseasePreviewUrl]);
 
 
 
@@ -346,6 +449,7 @@ const DataInput = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
       addToast("Saving plot profile and metrics to Database...", "info");
       const userStr = localStorage.getItem('user');
@@ -377,6 +481,8 @@ const DataInput = () => {
       }
     } catch (err) {
       addToast("Failed to connect to backend.", "error");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -446,7 +552,6 @@ const DataInput = () => {
     } else if (type === 'irrigation') {
       endpoint = '/api/predict_irrigation';
       payload = {
-        // Will map to what backend expects, assuming similar to others
         Soil_pH: formData.ph, Soil_Moisture: formData.moisture, Organic_Carbon: formData.organicCarbon,
         Electrical_Conductivity: formData.electricalConductivity, Temperature_C: formData.temperature,
         Humidity: formData.humidity, Rainfall_mm: formData.rainfall, Sunlight_Hours: formData.sunlightHours,
@@ -461,6 +566,7 @@ const DataInput = () => {
         return;
       }
 
+      setLoadingPredictionType('disease');
       addToast(`Analyzing image for diseases...`, "info", 1000);
       setPredictionResult(prev => ({ ...prev, disease: null, shap: null, advice: null, isGeneratingAdvice: false }));
 
@@ -481,10 +587,13 @@ const DataInput = () => {
       } catch (err) {
         console.error(err);
         addToast("Disease detection request failed.", "error");
+      } finally {
+        setLoadingPredictionType(null);
       }
       return;
     }
 
+    setLoadingPredictionType(type);
     addToast(`Running ${type} AI Model...`, "info", 1000);
     setPredictionResult(prev => ({ ...prev, [type]: null, shap: null, advice: null, isGeneratingAdvice: false })); // Clear previous result
 
@@ -508,6 +617,8 @@ const DataInput = () => {
     } catch (err) {
       console.error(err);
       addToast("Prediction request failed.", "error");
+    } finally {
+      setLoadingPredictionType(null);
     }
   };
 
@@ -531,8 +642,8 @@ const DataInput = () => {
   return (
     <div className="bg-surface text-on-surface min-h-screen pb-32">
       <TopAppBar onPlotSelect={handlePlotSelect} />
-      <main className="pt-24 pb-32 px-4 md:px-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Column */}
+      <main className="pt-24 pb-20 px-4 md:px-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Main Content Column (Scrollable Left Side) */}
         <div className="lg:col-span-2">
           <div className="mb-8">
             <span className="text-sm font-bold text-primary uppercase tracking-widest">Data Entry</span>
@@ -559,8 +670,8 @@ const DataInput = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 whitespace-nowrap transition-all border-b-4 font-label-lg
-                ${activeTab === tab.id ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-on-surface-variant hover:bg-surface-container'}`}
+                className={`flex items-center gap-2 px-6 py-4 whitespace-nowrap transition-all border-b-4 font-label-lg cursor-pointer
+                ${activeTab === tab.id ? 'border-primary text-primary bg-primary/5 font-bold' : 'border-transparent text-on-surface-variant hover:bg-surface-container'}`}
               >
                 <span className="material-symbols-outlined">{tab.icon}</span>
                 {tab.label}
@@ -569,7 +680,7 @@ const DataInput = () => {
           </div>
 
           {/* Tab Content Containers */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
 
             {/* 1. Crop Advisory Tab */}
             {activeTab === 'crop' && (
@@ -582,14 +693,29 @@ const DataInput = () => {
                   <h3 className="text-title-lg font-bold mb-2 mt-6 flex items-center gap-2"><span className="material-symbols-outlined text-tertiary">partly_cloudy_day</span> Environment</h3>
                   <WeatherSection formData={formData} handleChange={handleChange} />
                 </div>
-                <button onClick={() => runPrediction('crop')} className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                  <span className="material-symbols-outlined">psychology</span> Analyze Optimal Crop
+                <button
+                  onClick={() => runPrediction('crop')}
+                  disabled={loadingPredictionType === 'crop'}
+                  className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.99] shadow-md transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+                  {loadingPredictionType === 'crop' ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+                      <span>Analyzing Optimal Crop...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined">psychology</span>
+                      <span>Analyze Optimal Crop</span>
+                    </>
+                  )}
                 </button>
                 <ResultCard
                   title="Recommended Crop"
                   result={predictionResult.crop}
-                  imageSrc={getLocalImage('crops', predictionResult.crop)}
+                  imageSrc={getAssetImage('crops', predictionResult.crop)}
                   predictionResult={predictionResult}
+                  type="crop"
                 />
               </div>
             )}
@@ -636,14 +762,29 @@ const DataInput = () => {
                     <div className="flex flex-col"><label className="text-label-sm text-on-surface-variant">Prev Fertilizer (kg)</label><input name="fertilizerLastSeason" value={formData.fertilizerLastSeason} onChange={handleChange} className="h-10 border rounded px-2" type="number" /></div>
                   </div>
                 </div>
-                <button onClick={() => runPrediction('fertilizer')} className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                  <span className="material-symbols-outlined">compost</span> Recommend Fertilizer Mix
+                <button
+                  onClick={() => runPrediction('fertilizer')}
+                  disabled={loadingPredictionType === 'fertilizer'}
+                  className="w-full mt-8 bg-secondary text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.99] shadow-md transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+                  {loadingPredictionType === 'fertilizer' ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+                      <span>Recommending Fertilizer Mix...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined">compost</span>
+                      <span>Recommend Fertilizer Mix</span>
+                    </>
+                  )}
                 </button>
                 <ResultCard
                   title="Recommended Fertilizer"
                   result={predictionResult.fertilizer}
-                  imageSrc={getLocalImage('fertilizers', predictionResult.fertilizer)}
+                  imageSrc={getAssetImage('fertilizers', predictionResult.fertilizer)}
                   predictionResult={predictionResult}
+                  type="fertilizer"
                 />
               </div>
             )}
@@ -694,14 +835,29 @@ const DataInput = () => {
                     </div>
                   </div>
                 </div>
-                <button onClick={() => runPrediction('irrigation')} className="w-full mt-8 bg-[#0288d1] text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                  <span className="material-symbols-outlined">water_drop</span> Calculate Irrigation Needs
+                <button
+                  onClick={() => runPrediction('irrigation')}
+                  disabled={loadingPredictionType === 'irrigation'}
+                  className="w-full mt-8 bg-[#0288d1] text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.99] shadow-md transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+                  {loadingPredictionType === 'irrigation' ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+                      <span>Calculating Irrigation Needs...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined">water_drop</span>
+                      <span>Calculate Irrigation Needs</span>
+                    </>
+                  )}
                 </button>
                 <ResultCard
                   title="Irrigation Analysis"
                   result={predictionResult.irrigation}
-                  imageSrc={getLocalImage('irrigation', formData.irrigationType || 'water')}
+                  imageSrc={getAssetImage('irrigation', predictionResult.irrigation)}
                   predictionResult={predictionResult}
+                  type="irrigation"
                 />
               </div>
             )}
@@ -710,13 +866,23 @@ const DataInput = () => {
             {activeTab === 'disease' && (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="bg-surface-container border-2 border-dashed border-outline-variant rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-                  <div className="w-20 h-20 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-4">
-                    <span className="material-symbols-outlined text-4xl">add_a_photo</span>
-                  </div>
+                  {diseasePreviewUrl ? (
+                    <div className="relative w-48 h-48 rounded-2xl overflow-hidden mb-4 border border-outline-variant shadow-md">
+                      <img src={diseasePreviewUrl} alt="Staged Crop Leaf" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">check_circle</span> Ready
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-4">
+                      <span className="material-symbols-outlined text-4xl">add_a_photo</span>
+                    </div>
+                  )}
                   <h3 className="text-headline-sm font-bold mb-2">Upload Crop Image</h3>
                   <p className="text-body-md text-on-surface-variant max-w-md">Upload high-resolution images of crop leaves to run deep learning disease detection models.</p>
                   <input
                     type="file"
+                    accept="image/*"
                     className="mt-6 block w-full max-w-xs text-sm text-on-surface-variant
                     file:mr-4 file:py-2 file:px-4
                     file:rounded-full file:border-0
@@ -724,21 +890,41 @@ const DataInput = () => {
                     file:bg-primary file:text-white
                     hover:file:bg-primary/90 cursor-pointer"
                     onChange={(e) => {
-                      if (e.target.files.length > 0) {
-                        setFormData({ ...formData, diseaseImages: [e.target.files[0]] });
+                      if (e.target.files && e.target.files.length > 0) {
+                        const file = e.target.files[0];
+                        setFormData(prev => ({ ...prev, diseaseImages: [file] }));
+                        if (diseasePreviewUrl) {
+                          URL.revokeObjectURL(diseasePreviewUrl);
+                        }
+                        setDiseasePreviewUrl(URL.createObjectURL(file));
                         addToast("Image staged for analysis.", "info");
                       }
                     }}
                   />
                 </div>
-                <button onClick={() => runPrediction('disease')} className="bg-secondary w-full mt-4 bg-error text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 shadow-md">
-                  <span className="material-symbols-outlined">bug_report</span> Run Disease Scan
+                <button
+                  onClick={() => runPrediction('disease')}
+                  disabled={loadingPredictionType === 'disease'}
+                  className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.99] shadow-md transition-all cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+                  {loadingPredictionType === 'disease' ? (
+                    <>
+                      <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+                      <span>Running Disease Scan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined">bug_report</span>
+                      <span>Run Disease Scan</span>
+                    </>
+                  )}
                 </button>
                 <ResultCard
                   title="Disease Detection Analysis"
                   result={predictionResult.disease}
-                  imageSrc={formData.diseaseImages[0] ? URL.createObjectURL(formData.diseaseImages[0]) : null}
+                  imageSrc={diseasePreviewUrl || (typeof formData.diseaseImages?.[0] === 'string' ? formData.diseaseImages[0] : null)}
                   predictionResult={predictionResult}
+                  type="disease"
                 />
               </div>
             )}
@@ -746,21 +932,31 @@ const DataInput = () => {
             <div className="pt-6 border-t border-border mt-8">
               <button
                 onClick={handleSaveToDB}
-                className="w-full bg-primary text-primary-foreground h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all active:scale-95"
+                disabled={isSaving}
+                className="w-full bg-primary text-primary-foreground h-14 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 shadow-md transition-all active:scale-[0.99] cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined">save</span>
-                Update Current Plot Record
+                {isSaving ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+                    <span>Updating Record in Database...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">save</span>
+                    <span>Update Current Plot Record</span>
+                  </>
+                )}
               </button>
             </div>
 
           </div>
         </div>
 
-        {/* Right Sidebar Column */}
-        <div className="lg:col-span-1 space-y-8">
+        {/* Right Sidebar Column (Sticky Fixed Position) */}
+        <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1">
 
           {/* Plot Selection */}
-          <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-6 mb-6">
+          <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-6">
             <h3 className="text-title-lg font-bold mb-4">Plot Management</h3>
             <div className="flex flex-col gap-4">
               <div className="relative w-full">
@@ -777,7 +973,7 @@ const DataInput = () => {
               </div>
               <button
                 onClick={() => setIsMapOpen(true)}
-                className="w-full bg-secondary text-white h-12 px-5 rounded-xl shadow-md hover:brightness-110 flex items-center justify-center gap-2 font-medium"
+                className="w-full bg-secondary text-white h-12 px-5 rounded-xl shadow-md hover:brightness-110 flex items-center justify-center gap-2 font-medium cursor-pointer transition-all active:scale-[0.98]"
               >
                 <span className="material-symbols-outlined">add_location</span>
                 New Plot
@@ -846,7 +1042,7 @@ const DataInput = () => {
                 <span className="material-symbols-outlined text-primary">history</span>
                 <h3 className="text-title-lg font-bold">Recent Analysis</h3>
               </div>
-              <button className="text-primary text-label-sm font-bold hover:underline">View All</button>
+              <button className="text-primary text-label-sm font-bold hover:underline cursor-pointer">View All</button>
             </div>
 
             <div className="space-y-4">

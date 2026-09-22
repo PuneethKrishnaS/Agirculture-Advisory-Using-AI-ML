@@ -558,6 +558,89 @@ def generate_advice_4points():
     except Exception as e:
         return jsonify({"advice": {"Error": f"Connection error: {str(e)}"}})
 
+@app.route('/api/generate_advice', methods=['POST'])
+def generate_advice():
+    data = request.json or {}
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return jsonify({"advice": "GROQ_API_KEY environment variable is not set."}), 500
+
+    crop = data.get('crop', 'Crop')
+    fertilizer = data.get('fertilizer', 'Standard Fertilizer')
+    irrigation = data.get('irrigation', 'Standard Irrigation')
+    crop_reasoning = data.get('crop_reasoning', '')
+    fertilizer_reasoning = data.get('fertilizer_reasoning', '')
+    irrigation_reasoning = data.get('irrigation_reasoning', '')
+    n = data.get('N', 'N/A')
+    p = data.get('P', 'N/A')
+    k = data.get('K', 'N/A')
+    ph = data.get('ph', 'N/A')
+    temperature = data.get('temperature', 'N/A')
+    rainfall = data.get('rainfall', 'N/A')
+
+    prompt = f"""
+    You are an expert agronomist providing a comprehensive farming strategy for a farmer.
+    Farm & Soil Profile:
+    - Recommended Crop: {crop} (Key Drivers: {crop_reasoning})
+    - Recommended Fertilizer: {fertilizer} (Key Drivers: {fertilizer_reasoning})
+    - Recommended Irrigation: {irrigation} (Key Drivers: {irrigation_reasoning})
+    - Soil N-P-K: {n} - {p} - {k} kg/ha
+    - Soil pH: {ph}
+    - Temperature: {temperature}°C, Rainfall: {rainfall} mm
+
+    Generate a rich, highly practical agronomist advisory broken into 5 sections.
+    You MUST respond strictly with valid JSON matching this exact structure:
+    {{
+      "health_score": {{
+        "title": "Soil & Plot Health Score",
+        "information": "Detailed markdown explanation of soil viability, nutrient status, and an estimated plot health score out of 100 with key strengths and weaknesses."
+      }},
+      "reasoning": {{
+        "title": "Agronomic ML Reasoning & Diagnostics",
+        "information": "Detailed markdown explaining why the ML model selected {crop}, {fertilizer}, and {irrigation} for this specific soil and climate condition."
+      }},
+      "calendar": {{
+        "title": "Crop Lifecycle & Action Calendar",
+        "information": "A structured stage-by-stage markdown guide (e.g. Sowing, Vegetative, Flowering, Harvesting) with recommended weekly activities, irrigation intervals, and fertilizer applications."
+      }},
+      "pests": {{
+        "title": "Pest & Disease Prevention Strategy",
+        "information": "Top potential threats for {crop} under these temperature/rainfall conditions, and organic/chemical IPM prevention practices."
+      }},
+      "economics": {{
+        "title": "Economic & Yield Optimization",
+        "information": "Practical tips to maximize profit margins, minimize fertilizer waste, and optimize market harvest timing."
+      }}
+    }}
+    """
+
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": "openai/gpt-oss-120b",
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.6,
+            "response_format": {"type": "json_object"}
+        }
+
+        resp = requests.post("https://api.groq.com/openai/v1/chat/completions", json=payload, headers=headers)
+        if resp.status_code == 200:
+            result = resp.json()
+            advice_str = result['choices'][0]['message']['content']
+            import json
+            try:
+                advice_json = json.loads(advice_str)
+                return jsonify({"advice": advice_json})
+            except Exception as e:
+                return jsonify({"advice": f"Failed to parse advisory format: {str(e)}"})
+        else:
+            return jsonify({"advice": f"AI Service Error ({resp.status_code}): {resp.text}"}), 502
+    except Exception as e:
+        return jsonify({"advice": f"Connection error: {str(e)}"}), 500
+
 if __name__ == '__main__':
     initialize_models()
     port = int(os.environ.get("PORT", 5000))

@@ -162,7 +162,7 @@ const MainDashboard = () => {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Link to="/input" className="flex flex-col items-center justify-center rounded-xl border bg-card text-card-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors p-4">
               <span className="material-symbols-outlined text-3xl mb-2 text-muted-foreground">edit_document</span>
               <span className="font-medium">Data Entry</span>
@@ -175,10 +175,6 @@ const MainDashboard = () => {
               <span className="material-symbols-outlined text-3xl mb-2 text-muted-foreground">analytics</span>
               <span className="font-medium">Reports</span>
             </Link>
-            <button className="flex flex-col items-center justify-center rounded-xl border bg-card text-card-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors p-4">
-              <span className="material-symbols-outlined text-3xl mb-2 text-muted-foreground">settings</span>
-              <span className="font-medium">Settings</span>
-            </button>
           </div>
         </div>
 
